@@ -1,0 +1,123 @@
+services:
+
+  # ── Backend API ────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+      target: dev
+    command: ./scripts/start_api.sh
+    environment:
+      APP_ENV: development
+      SECRET_KEY: dev-secret-key-change-this-in-production-32chars
+      DATABASE_URL: postgresql+asyncpg://studentsclub:dev@postgres:5432/studentsclub
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: studentsclub-uploads
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minio
+      S3_SECRET_KEY: minio12345
+      AI_PROVIDER: mock
+      CORS_ORIGINS: http://localhost:5173
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # ── Celery Worker ──────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+      target: dev
+    command: ./scripts/start_worker.sh
+    environment:
+      APP_ENV: development
+      SECRET_KEY: dev-secret-key-change-this-in-production-32chars
+      DATABASE_URL: postgresql+asyncpg://studentsclub:dev@postgres:5432/studentsclub
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      S3_ENDPOINT_URL: http://minio:9000
+      S3_BUCKET: studentsclub-uploads
+      S3_REGION: us-east-1
+      S3_ACCESS_KEY: minio
+      S3_SECRET_KEY: minio12345
+      AI_PROVIDER: mock
+    depends_on:
+      - api
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # ── Celery Beat ────────────────────────────────────────────────────────────
+  beat:
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+      target: dev
+    command: ./scripts/start_beat.sh
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+    depends_on:
+      - redis
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: studentsclub
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: studentsclub
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U studentsclub"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── MinIO (S3-compatible storage) ─────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio12345
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  minio_data:

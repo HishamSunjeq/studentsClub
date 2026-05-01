@@ -1,0 +1,59 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuthStore } from "@/features/auth/auth.store";
+import LoginPage from "@/features/auth/LoginPage";
+import RegisterPage from "@/features/auth/RegisterPage";
+import SubjectsPage from "@/features/subjects/SubjectsPage";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+function Home() {
+  const { user, logout } = useAuthStore();
+
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>StudentsClub</CardTitle>
+          <CardDescription>
+            {user
+              ? `Welcome, ${user.full_name}`
+              : "Upload study material. Get AI-generated questions. Practice with your peers."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex gap-2">
+          {user ? (
+            <>
+              <Button asChild>
+                <a href="/subjects">Browse Subjects</a>
+              </Button>
+              <Button variant="outline" onClick={logout}>
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild>
+                <a href="/register">Get Started</a>
+              </Button>
+              <Button variant="outline" asChild>
+                <a href="/login">Sign In</a>
+              </Button>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/subjects" element={<SubjectsPage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
