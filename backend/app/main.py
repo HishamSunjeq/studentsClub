@@ -12,6 +12,13 @@ from app.api.v1.router import api_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     configure_logging()
+    import structlog
+    from app.services import storage_service
+    log = structlog.get_logger()
+    try:
+        storage_service.ensure_bucket_exists()
+    except Exception as exc:
+        log.warning("storage_setup_failed", error=str(exc))
     yield
 
 

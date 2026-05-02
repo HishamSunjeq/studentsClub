@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     celery_result_backend: str = "redis://localhost:6379/2"
 
     s3_endpoint_url: str | None = None
+    s3_public_endpoint_url: str | None = None  # browser-reachable URL (differs in Docker)
     s3_bucket: str = "studentsclub-uploads"
     s3_region: str = "us-east-1"
     s3_access_key: str = ""

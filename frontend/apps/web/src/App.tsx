@@ -1,8 +1,13 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router";
 import { useAuthStore } from "@/features/auth/auth.store";
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
+import DraftsListPage from "@/features/question-sets/DraftsListPage";
+import ReviewPage from "@/features/question-sets/ReviewPage";
+import QuizPlayerPage from "@/features/quizzes/QuizPlayerPage";
+import QuizStartPage from "@/features/quizzes/QuizStartPage";
 import SubjectsPage from "@/features/subjects/SubjectsPage";
+import UploadPage from "@/features/uploads/UploadPage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -20,11 +25,20 @@ function Home() {
               : "Upload study material. Get AI-generated questions. Practice with your peers."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="flex gap-2">
+        <CardContent className="flex flex-wrap gap-2">
           {user ? (
             <>
               <Button asChild>
                 <a href="/subjects">Browse Subjects</a>
+              </Button>
+              <Button asChild variant="secondary">
+                <a href="/upload">Upload Material</a>
+              </Button>
+              <Button asChild variant="secondary">
+                <a href="/drafts">My Drafts</a>
+              </Button>
+              <Button asChild>
+                <a href="/quiz">Take a Quiz</a>
               </Button>
               <Button variant="outline" onClick={logout}>
                 Sign out
@@ -53,6 +67,11 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/subjects" element={<SubjectsPage />} />
+      <Route path="/upload" element={<UploadPage />} />
+      <Route path="/drafts" element={<DraftsListPage />} />
+      <Route path="/drafts/:id" element={<ReviewPage />} />
+      <Route path="/quiz" element={<QuizStartPage />} />
+      <Route path="/quiz/:id" element={<QuizPlayerPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

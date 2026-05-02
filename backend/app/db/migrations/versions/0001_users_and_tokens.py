@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 revision: str = "0001"
 down_revision: str | None = None
@@ -29,14 +30,14 @@ def upgrade() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.UUID(), nullable=False, server_default=sa.text("gen_random_uuid()")),
-        sa.Column("email", sa.Text().with_variant(sa.text("citext"), "postgresql"), nullable=False),
+        sa.Column("email", sa.Text(), nullable=False),
         sa.Column("password_hash", sa.Text(), nullable=False),
         sa.Column("full_name", sa.Text(), nullable=False),
         sa.Column("college", sa.Text(), nullable=False),
         sa.Column("academic_year", sa.SmallInteger(), nullable=False),
         sa.Column(
             "role",
-            sa.Enum("student", "moderator", "admin", name="user_role", create_type=False),
+            postgresql.ENUM("student", "moderator", "admin", name="user_role", create_type=False),
             nullable=False,
             server_default="student",
         ),

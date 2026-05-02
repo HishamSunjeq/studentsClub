@@ -9,6 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN pip install --no-cache-dir uv==0.5.14
 
+# Put the venv outside /app so docker-compose bind mounts can't mask it.
+ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
 WORKDIR /app
 
 # ── Development stage ─────────────────────────────────────────────────────────
@@ -19,8 +25,7 @@ RUN uv sync
 
 COPY . .
 
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
+RUN chmod +x scripts/*.sh
 
 # ── Production stage ──────────────────────────────────────────────────────────
 FROM base AS prod
@@ -31,9 +36,6 @@ RUN uv sync --no-dev
 COPY app ./app
 COPY scripts ./scripts
 COPY alembic.ini ./
-
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN chmod +x scripts/*.sh
 
