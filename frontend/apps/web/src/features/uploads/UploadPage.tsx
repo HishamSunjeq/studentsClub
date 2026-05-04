@@ -24,7 +24,6 @@ export default function UploadPage() {
   const [step, setStep] = useState<UploadStep>("idle");
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
-  const [uploadId, setUploadId] = useState("");
   const [dragging, setDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -84,10 +83,9 @@ export default function UploadPage() {
       setProgress(80);
       setStep("finalizing");
 
-      const result = await finalizeUpload(presign.upload_id);
+      await finalizeUpload(presign.upload_id);
       setProgress(100);
       setStep("done");
-      setUploadId(result.id);
     },
     onError: (err: Error) => {
       setStep("error");
@@ -187,7 +185,6 @@ export default function UploadPage() {
                   setFile(null);
                   setStep("idle");
                   setProgress(0);
-                  setUploadId("");
                   if (fileInputRef.current) fileInputRef.current.value = "";
                 }}
                 variant="outline"

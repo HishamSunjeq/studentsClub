@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router";
 import { useAuthStore } from "@/features/auth/auth.store";
 import LoginPage from "@/features/auth/LoginPage";
 import RegisterPage from "@/features/auth/RegisterPage";
+import ComponentsShowcasePage from "@/features/dev/ComponentsShowcasePage";
 import DraftsListPage from "@/features/question-sets/DraftsListPage";
 import ReviewPage from "@/features/question-sets/ReviewPage";
 import QuizPlayerPage from "@/features/quizzes/QuizPlayerPage";
@@ -72,6 +73,9 @@ export default function App() {
       <Route path="/drafts/:id" element={<ReviewPage />} />
       <Route path="/quiz" element={<QuizStartPage />} />
       <Route path="/quiz/:id" element={<QuizPlayerPage />} />
+      {import.meta.env.DEV && (
+        <Route path="/dev/components" element={<ComponentsShowcasePage />} />
+      )}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

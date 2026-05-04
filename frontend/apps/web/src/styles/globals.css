@@ -1,235 +1,270 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/newsreader";
 
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui CSS variables are injected here by `pnpm dlx shadcn init` */
+/* =========================================================================
+   StudentsClub — Premium Academic design tokens
+   Source: frontend/stitch_studybank/premium_academic/DESIGN.md
+   Dark mode is the primary experience. `:root` defines light; `.dark` overrides.
+   The default theme applied to <html> is `.dark` (see index.html).
+   ========================================================================= */
 
 @theme inline {
-
+    /* Typography */
+    --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Newsreader Variable', ui-serif, Georgia, serif;
     --font-heading: var(--font-sans);
 
-    --font-sans: 'Geist Variable', sans-serif;
+    /* Radii — spec: 10px small, 14px large */
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
 
-    --color-sidebar-ring: var(--sidebar-ring);
-
-    --color-sidebar-border: var(--sidebar-border);
-
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-
-    --color-sidebar-accent: var(--sidebar-accent);
-
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-
-    --color-sidebar-primary: var(--sidebar-primary);
-
-    --color-sidebar-foreground: var(--sidebar-foreground);
-
-    --color-sidebar: var(--sidebar);
-
-    --color-chart-5: var(--chart-5);
-
-    --color-chart-4: var(--chart-4);
-
-    --color-chart-3: var(--chart-3);
-
-    --color-chart-2: var(--chart-2);
-
-    --color-chart-1: var(--chart-1);
-
+    /* shadcn color tokens (mapped from CSS variables below) */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
     --color-ring: var(--ring);
 
-    --color-input: var(--input);
+    /* Chart palette (data viz) */
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
 
-    --color-border: var(--border);
+    /* Sidebar tokens */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
 
-    --color-destructive: var(--destructive);
+    /* Semantic surface scale (Premium Academic — tonal layering) */
+    --color-surface: var(--surface);
+    --color-surface-low: var(--surface-low);
+    --color-surface-high: var(--surface-high);
+    --color-surface-highest: var(--surface-highest);
 
-    --color-accent-foreground: var(--accent-foreground);
+    /* Intent colors beyond shadcn defaults */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
 
-    --color-accent: var(--accent);
-
-    --color-muted-foreground: var(--muted-foreground);
-
-    --color-muted: var(--muted);
-
-    --color-secondary-foreground: var(--secondary-foreground);
-
-    --color-secondary: var(--secondary);
-
-    --color-primary-foreground: var(--primary-foreground);
-
-    --color-primary: var(--primary);
-
-    --color-popover-foreground: var(--popover-foreground);
-
-    --color-popover: var(--popover);
-
-    --color-card-foreground: var(--card-foreground);
-
-    --color-card: var(--card);
-
-    --color-foreground: var(--foreground);
-
-    --color-background: var(--background);
-
-    --radius-sm: calc(var(--radius) * 0.6);
-
-    --radius-md: calc(var(--radius) * 0.8);
-
-    --radius-lg: var(--radius);
-
-    --radius-xl: calc(var(--radius) * 1.4);
-
-    --radius-2xl: calc(var(--radius) * 1.8);
-
-    --radius-3xl: calc(var(--radius) * 2.2);
-
-    --radius-4xl: calc(var(--radius) * 2.6);
+    /* Layout primitives */
+    --container-max: 1200px;
+    --sidebar-width: 260px;
+    --sidebar-width-collapsed: 72px;
 }
 
+/* =========================================================================
+   LIGHT THEME (default for `:root`, applied when html has `.light` class)
+   Spec: near-white #F9FAFB surface, deep indigo #4F46E5 accent, emerald #10B981 secondary.
+   ========================================================================= */
 :root {
+    --radius: 0.625rem; /* 10px — spec base */
 
-    --background: oklch(1 0 0);
+    --background: #f9fafb;
+    --foreground: #131313;
 
-    --foreground: oklch(0.145 0 0);
+    --surface: #ffffff;
+    --surface-low: #f3f4f6;
+    --surface-high: #e5e7eb;
+    --surface-highest: #d1d5db;
 
-    --card: oklch(1 0 0);
+    --card: #ffffff;
+    --card-foreground: #131313;
 
-    --card-foreground: oklch(0.145 0 0);
+    --popover: #ffffff;
+    --popover-foreground: #131313;
 
-    --popover: oklch(1 0 0);
+    --primary: #4f46e5;
+    --primary-foreground: #ffffff;
 
-    --popover-foreground: oklch(0.145 0 0);
+    --secondary: #f3f4f6;
+    --secondary-foreground: #131313;
 
-    --primary: oklch(0.205 0 0);
+    --muted: #f3f4f6;
+    --muted-foreground: #6b7280;
 
-    --primary-foreground: oklch(0.985 0 0);
+    --accent: #eef2ff;
+    --accent-foreground: #4f46e5;
 
-    --secondary: oklch(0.97 0 0);
+    --destructive: #dc2626;
 
-    --secondary-foreground: oklch(0.205 0 0);
+    --success: #10b981;
+    --success-foreground: #ffffff;
 
-    --muted: oklch(0.97 0 0);
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
 
-    --muted-foreground: oklch(0.556 0 0);
+    --border: #e5e7eb;
+    --input: #e5e7eb;
+    --ring: #4f46e5;
 
-    --accent: oklch(0.97 0 0);
+    --chart-1: #4f46e5;
+    --chart-2: #10b981;
+    --chart-3: #f59e0b;
+    --chart-4: #ec4899;
+    --chart-5: #06b6d4;
 
-    --accent-foreground: oklch(0.205 0 0);
-
-    --destructive: oklch(0.577 0.245 27.325);
-
-    --border: oklch(0.922 0 0);
-
-    --input: oklch(0.922 0 0);
-
-    --ring: oklch(0.708 0 0);
-
-    --chart-1: oklch(0.87 0 0);
-
-    --chart-2: oklch(0.556 0 0);
-
-    --chart-3: oklch(0.439 0 0);
-
-    --chart-4: oklch(0.371 0 0);
-
-    --chart-5: oklch(0.269 0 0);
-
-    --radius: 0.625rem;
-
-    --sidebar: oklch(0.985 0 0);
-
-    --sidebar-foreground: oklch(0.145 0 0);
-
-    --sidebar-primary: oklch(0.205 0 0);
-
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-
-    --sidebar-accent: oklch(0.97 0 0);
-
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-
-    --sidebar-border: oklch(0.922 0 0);
-
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: #ffffff;
+    --sidebar-foreground: #131313;
+    --sidebar-primary: #4f46e5;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #f3f4f6;
+    --sidebar-accent-foreground: #131313;
+    --sidebar-border: #e5e7eb;
+    --sidebar-ring: #4f46e5;
 }
 
+/* =========================================================================
+   DARK THEME (primary experience — applied via `.dark` class on <html>)
+   Spec hex from DESIGN.md frontmatter.
+   ========================================================================= */
 .dark {
+    --background: #131313;
+    --foreground: #e5e2e1;
 
-    --background: oklch(0.145 0 0);
+    --surface: #131313;
+    --surface-low: #1c1b1b;
+    --surface-high: #2a2a2a;
+    --surface-highest: #353534;
 
-    --foreground: oklch(0.985 0 0);
+    --card: #1c1b1b;
+    --card-foreground: #e5e2e1;
 
-    --card: oklch(0.205 0 0);
+    --popover: #2a2a2a;
+    --popover-foreground: #e5e2e1;
 
-    --card-foreground: oklch(0.985 0 0);
+    /* Primary action: deep indigo container; foreground is the lighter indigo text */
+    --primary: #4f46e5;
+    --primary-foreground: #dad7ff;
 
-    --popover: oklch(0.205 0 0);
+    --secondary: #2a2a2a;
+    --secondary-foreground: #e5e2e1;
 
-    --popover-foreground: oklch(0.985 0 0);
+    --muted: #1c1b1b;
+    --muted-foreground: #c7c4d8;
 
-    --primary: oklch(0.922 0 0);
+    --accent: #4f46e5;
+    --accent-foreground: #dad7ff;
 
-    --primary-foreground: oklch(0.205 0 0);
+    --destructive: #ffb4ab;
 
-    --secondary: oklch(0.269 0 0);
+    --success: #4edea3;
+    --success-foreground: #003824;
 
-    --secondary-foreground: oklch(0.985 0 0);
+    --warning: #ffb695;
+    --warning-foreground: #571f00;
 
-    --muted: oklch(0.269 0 0);
+    --border: #262626;
+    --input: #353534;
+    --ring: #c3c0ff;
 
-    --muted-foreground: oklch(0.708 0 0);
+    --chart-1: #c3c0ff;
+    --chart-2: #4edea3;
+    --chart-3: #ffb695;
+    --chart-4: #ffb4ab;
+    --chart-5: #918fa1;
 
-    --accent: oklch(0.269 0 0);
-
-    --accent-foreground: oklch(0.985 0 0);
-
-    --destructive: oklch(0.704 0.191 22.216);
-
-    --border: oklch(1 0 0 / 10%);
-
-    --input: oklch(1 0 0 / 15%);
-
-    --ring: oklch(0.556 0 0);
-
-    --chart-1: oklch(0.87 0 0);
-
-    --chart-2: oklch(0.556 0 0);
-
-    --chart-3: oklch(0.439 0 0);
-
-    --chart-4: oklch(0.371 0 0);
-
-    --chart-5: oklch(0.269 0 0);
-
-    --sidebar: oklch(0.205 0 0);
-
-    --sidebar-foreground: oklch(0.985 0 0);
-
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-
-    --sidebar-accent: oklch(0.269 0 0);
-
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-
-    --sidebar-border: oklch(1 0 0 / 10%);
-
-    --sidebar-ring: oklch(0.556 0 0);
+    --sidebar: #0e0e0e;
+    --sidebar-foreground: #e5e2e1;
+    --sidebar-primary: #c3c0ff;
+    --sidebar-primary-foreground: #1d00a5;
+    --sidebar-accent: #1c1b1b;
+    --sidebar-accent-foreground: #e5e2e1;
+    --sidebar-border: #262626;
+    --sidebar-ring: #c3c0ff;
 }
 
+/* =========================================================================
+   Base layer
+   ========================================================================= */
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply bg-background text-foreground;
+
+    html {
+        @apply font-sans;
+        font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
     }
-  html {
-    @apply font-sans;
+
+    body {
+        @apply bg-background text-foreground;
+        font-synthesis-weight: none;
+    }
+
+    /* Long-form study content uses Newsreader serif per spec */
+    .font-study {
+        font-family: var(--font-serif);
+        font-size: 1.125rem;   /* 18px — study-body */
+        line-height: 1.6;
+        font-weight: 400;
+    }
+
+    .font-study-quote {
+        font-family: var(--font-serif);
+        font-size: 1.25rem;    /* 20px — study-quote */
+        line-height: 1.5;
+        font-weight: 400;
+    }
+
+    /* Honor reduced-motion globally */
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+        }
+    }
+}
+
+/* =========================================================================
+   Utilities — design-system helpers used throughout
+   ========================================================================= */
+@layer utilities {
+    /* Fixed-fluid container per spec */
+    .container-page {
+        width: 100%;
+        max-width: var(--container-max);
+        margin-inline: auto;
+        padding-inline: 1.5rem;
+    }
+
+    /* Subtle inner-glow ring for focused inputs (per spec) */
+    .ring-focus {
+        box-shadow: 0 0 0 2px color-mix(in oklab, var(--ring) 35%, transparent);
     }
 }
