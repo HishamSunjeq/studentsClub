@@ -18,7 +18,7 @@ from app.services import quizzes_service
 router = APIRouter()
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=QuizSessionWithQuestionsResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=QuizSessionWithQuestionsResponse, operation_id="quizzes_start")
 async def start_quiz(
     payload: QuizStartRequest,
     current_user: CurrentUser,
@@ -52,7 +52,7 @@ async def start_quiz(
     )
 
 
-@router.get("/me", response_model=QuizSessionListResponse)
+@router.get("/me", response_model=QuizSessionListResponse, operation_id="quizzes_list_mine")
 async def list_my_quizzes(
     current_user: CurrentUser,
     db: DBSession,
@@ -71,7 +71,7 @@ async def list_my_quizzes(
     )
 
 
-@router.get("/{session_id}", response_model=QuizSessionResponse)
+@router.get("/{session_id}", response_model=QuizSessionResponse, operation_id="quizzes_get")
 async def get_quiz(
     session_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuizSessionResponse:
@@ -81,7 +81,7 @@ async def get_quiz(
     return QuizSessionResponse.model_validate(session)
 
 
-@router.get("/{session_id}/questions", response_model=QuizSessionWithQuestionsResponse)
+@router.get("/{session_id}/questions", response_model=QuizSessionWithQuestionsResponse, operation_id="quizzes_get_with_questions")
 async def get_quiz_with_questions(
     session_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuizSessionWithQuestionsResponse:
@@ -116,7 +116,7 @@ async def get_quiz_with_questions(
     )
 
 
-@router.post("/{session_id}/answer", response_model=QuizAnswerResponse)
+@router.post("/{session_id}/answer", response_model=QuizAnswerResponse, operation_id="quizzes_submit_answer")
 async def submit_answer(
     session_id: UUID,
     payload: QuizAnswerRequest,
@@ -139,7 +139,7 @@ async def submit_answer(
     )
 
 
-@router.post("/{session_id}/complete", response_model=QuizSessionResponse)
+@router.post("/{session_id}/complete", response_model=QuizSessionResponse, operation_id="quizzes_complete")
 async def complete_quiz(
     session_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuizSessionResponse:

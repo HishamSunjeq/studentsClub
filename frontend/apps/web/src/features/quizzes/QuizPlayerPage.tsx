@@ -1,20 +1,18 @@
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { useAuthStore } from "@/features/auth/auth.store";
 import {
-  completeQuiz,
-  fetchQuizSession,
-  submitAnswer,
-  type QuizAnswerResponse,
-  type QuizSessionWithQuestions,
-} from "@/features/quizzes/quizzes.api";
+  quizzesComplete,
+  quizzesSubmitAnswer,
+  useQuizzesGetWithQuestions,
+} from "@/api/generated/endpoints/quizzes/quizzes";
+import type { QuizAnswerResponse, QuizSessionWithQuestionsResponse } from "@/api/generated/schemas";
+import { useAuthStore } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface LocationState {
-  session?: QuizSessionWithQuestions;
+  session?: QuizSessionWithQuestionsResponse;
 }
 
 export default function QuizPlayerPage() {
@@ -35,10 +33,8 @@ export default function QuizPlayerPage() {
 
   // If we don't have the session in location.state (hard refresh, deep link),
   // fetch it. Skip the fetch when state is already populated.
-  const { data: fetched, isLoading, error } = useQuery({
-    queryKey: ["quiz-session", id],
-    queryFn: () => fetchQuizSession(id),
-    enabled: !stateSession,
+  const { data: fetched, isLoading, error } = useQuizzesGetWithQuestions(id, {
+    query: { enabled: !stateSession },
   });
 
   const session = stateSession ?? fetched;
@@ -51,7 +47,7 @@ export default function QuizPlayerPage() {
   return <QuizRunner session={session} />;
 }
 
-function QuizRunner({ session }: { session: QuizSessionWithQuestions }) {
+function QuizRunner({ session }: { session: QuizSessionWithQuestionsResponse }) {
   const navigate = useNavigate();
   const total = session.questions.length;
 
@@ -77,7 +73,7 @@ function QuizRunner({ session }: { session: QuizSessionWithQuestions }) {
       void (async () => {
         setCompleting(true);
         try {
-          await completeQuiz(session.id);
+          await quizzesComplete(session.id);
           setDone(true);
         } catch {
           /* user can press the Finish button manually */
@@ -97,7 +93,7 @@ function QuizRunner({ session }: { session: QuizSessionWithQuestions }) {
     setPickedChoiceId(choiceId);
     setSubmitting(true);
     try {
-      const res = await submitAnswer(session.id, {
+      const res = await quizzesSubmitAnswer(session.id, {
         question_id: current.id,
         choice_id: choiceId,
       });
@@ -117,7 +113,7 @@ function QuizRunner({ session }: { session: QuizSessionWithQuestions }) {
     if (isLast) {
       setCompleting(true);
       try {
-        await completeQuiz(session.id);
+        await quizzesComplete(session.id);
         setDone(true);
       } catch {
         toast.error("Failed to complete quiz");

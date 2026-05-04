@@ -1,15 +1,10 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { uploadsCreate, uploadsFinalize } from "@/api/generated/endpoints/uploads/uploads";
+import { useSubjectsListMine } from "@/api/generated/endpoints/subjects/subjects";
 import { useAuthStore } from "@/features/auth/auth.store";
-import { fetchMySubjects } from "@/features/subjects/subjects.api";
-import {
-  ALLOWED_TYPES,
-  MAX_BYTES,
-  createUpload,
-  finalizeUpload,
-  uploadToS3,
-} from "@/features/uploads/uploads.api";
+import { ALLOWED_TYPES, MAX_BYTES, uploadToS3 } from "@/features/uploads/uploads.utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -28,11 +23,7 @@ export default function UploadPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: mySubjects } = useQuery({
-    queryKey: ["subjects/me"],
-    queryFn: () => fetchMySubjects({ size: 100 }),
-    enabled: !!user,
-  });
+  const { data: mySubjects } = useSubjectsListMine({ size: 100 }, { query: { enabled: !!user } });
 
   if (!user) {
     navigate("/login");
@@ -71,7 +62,7 @@ export default function UploadPage() {
       setStep("uploading");
       setProgress(0);
 
-      const presign = await createUpload({
+      const presign = await uploadsCreate({
         filename: file.name,
         content_type: file.type,
         size_bytes: file.size,
@@ -83,7 +74,7 @@ export default function UploadPage() {
       setProgress(80);
       setStep("finalizing");
 
-      await finalizeUpload(presign.upload_id);
+      await uploadsFinalize(presign.upload_id);
       setProgress(100);
       setStep("done");
     },

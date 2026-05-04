@@ -1,9 +1,8 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useSubjectsListMine } from "@/api/generated/endpoints/subjects/subjects";
+import { useQuizzesStart } from "@/api/generated/endpoints/quizzes/quizzes";
 import { useAuthStore } from "@/features/auth/auth.store";
-import { fetchMySubjects } from "@/features/subjects/subjects.api";
-import { startQuiz } from "@/features/quizzes/quizzes.api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -19,18 +18,16 @@ export default function QuizStartPage() {
     return null;
   }
 
-  const { data: mySubjects } = useQuery({
-    queryKey: ["subjects/me"],
-    queryFn: () => fetchMySubjects({ size: 100 }),
-  });
+  const { data: mySubjects } = useSubjectsListMine({ size: 100 });
 
-  const startMutation = useMutation({
-    mutationFn: () => startQuiz({ subject_id: subjectId, count }),
-    onSuccess: (session) => {
-      navigate(`/quiz/${session.id}`, { state: { session } });
-    },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      toast.error(err.response?.data?.detail ?? "Failed to start quiz");
+  const startMutation = useQuizzesStart({
+    mutation: {
+      onSuccess: (session) => {
+        navigate(`/quiz/${session.id}`, { state: { session } });
+      },
+      onError: (err: { response?: { data?: { detail?: string } } }) => {
+        toast.error(err.response?.data?.detail ?? "Failed to start quiz");
+      },
     },
   });
 
@@ -80,7 +77,7 @@ export default function QuizStartPage() {
           <Button
             className="w-full"
             disabled={!subjectId || startMutation.isPending}
-            onClick={() => startMutation.mutate()}
+            onClick={() => startMutation.mutate({ data: { subject_id: subjectId, count } })}
           >
             {startMutation.isPending ? "Starting…" : "Start quiz"}
           </Button>

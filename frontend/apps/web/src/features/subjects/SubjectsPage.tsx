@@ -1,14 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthStore } from "@/features/auth/auth.store";
 import {
-  enrollSubject,
-  fetchMySubjects,
-  fetchSubjects,
-  unenrollSubject,
-  type Subject,
-} from "@/features/subjects/subjects.api";
+  getSubjectsListMineQueryKey,
+  useSubjectsEnroll,
+  useSubjectsList,
+  useSubjectsListMine,
+  useSubjectsUnenroll,
+} from "@/api/generated/endpoints/subjects/subjects";
+import type { SubjectResponse } from "@/api/generated/schemas";
+import { useAuthStore } from "@/features/auth/auth.store";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,48 +28,42 @@ export default function SubjectsPage() {
 
   const queryClient = useQueryClient();
 
-  const { data: subjectsData, isLoading: loadingSubjects } = useQuery({
-    queryKey: ["subjects", { college, academicYear, page }],
-    queryFn: () =>
-      fetchSubjects({
-        college: college || undefined,
-        academic_year: academicYear,
-        page,
-        size: 12,
-      }),
+  const { data: subjectsData, isLoading: loadingSubjects } = useSubjectsList({
+    college: college || undefined,
+    academic_year: academicYear,
+    page,
+    size: 12,
   });
 
-  const { data: myData } = useQuery({
-    queryKey: ["subjects/me"],
-    queryFn: () => fetchMySubjects({ size: 100 }),
-    enabled: !!user,
-  });
+  const { data: myData } = useSubjectsListMine({ size: 100 }, { query: { enabled: !!user } });
 
   const enrolledIds = new Set(myData?.items.map((s) => s.id) ?? []);
 
-  const enrollMutation = useMutation({
-    mutationFn: enrollSubject,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["subjects/me"] });
+  const enrollMutation = useSubjectsEnroll({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getSubjectsListMineQueryKey() });
+      },
     },
   });
 
-  const unenrollMutation = useMutation({
-    mutationFn: unenrollSubject,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["subjects/me"] });
+  const unenrollMutation = useSubjectsUnenroll({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getSubjectsListMineQueryKey() });
+      },
     },
   });
 
-  function handleEnrollToggle(subject: Subject) {
+  function handleEnrollToggle(subject: SubjectResponse) {
     if (!user) {
       navigate("/login");
       return;
     }
     if (enrolledIds.has(subject.id)) {
-      unenrollMutation.mutate(subject.id);
+      unenrollMutation.mutate({ subjectId: subject.id });
     } else {
-      enrollMutation.mutate(subject.id);
+      enrollMutation.mutate({ subjectId: subject.id });
     }
   }
 

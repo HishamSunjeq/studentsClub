@@ -15,7 +15,7 @@ from app.services import question_sets_service
 router = APIRouter()
 
 
-@router.patch("/{question_id}", response_model=QuestionResponse)
+@router.patch("/{question_id}", response_model=QuestionResponse, operation_id="questions_update")
 async def update_question(
     question_id: UUID,
     payload: QuestionUpdateRequest,
@@ -45,7 +45,7 @@ async def update_question(
     )
 
 
-@router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{question_id}", status_code=status.HTTP_204_NO_CONTENT, operation_id="questions_deactivate")
 async def deactivate_question(
     question_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> None:

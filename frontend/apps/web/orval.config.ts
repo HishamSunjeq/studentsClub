@@ -5,8 +5,8 @@ export default defineConfig({
     input: {
       // Dev: point at the running FastAPI server.
       // CI/offline: swap to a checked-in JSON file:
-      //   target: "../../backend/openapi.json"
-      target: "http://localhost:8000/api/v1/openapi.json",
+      //   target: "./openapi.json"
+      target: "./openapi.json",
     },
     output: {
       mode: "tags-split",

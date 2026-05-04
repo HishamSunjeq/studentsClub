@@ -9,7 +9,7 @@ from app.services import subjects_service
 router = APIRouter()
 
 
-@router.get("", response_model=SubjectListResponse)
+@router.get("", response_model=SubjectListResponse, operation_id="subjects_list")
 async def list_subjects(
     db: DBSession,
     college: str | None = Query(default=None),
@@ -29,7 +29,7 @@ async def list_subjects(
     )
 
 
-@router.get("/me", response_model=SubjectListResponse)
+@router.get("/me", response_model=SubjectListResponse, operation_id="subjects_list_mine")
 async def my_subjects(
     current_user: CurrentUser,
     db: DBSession,
@@ -48,13 +48,13 @@ async def my_subjects(
     )
 
 
-@router.get("/{subject_id}", response_model=SubjectResponse)
+@router.get("/{subject_id}", response_model=SubjectResponse, operation_id="subjects_get")
 async def get_subject(subject_id: uuid.UUID, db: DBSession) -> SubjectResponse:
     subject = await subjects_service.get_subject(db=db, subject_id=subject_id)
     return SubjectResponse.model_validate(subject)
 
 
-@router.post("/{subject_id}/enroll", response_model=EnrollmentResponse, status_code=201)
+@router.post("/{subject_id}/enroll", response_model=EnrollmentResponse, status_code=201, operation_id="subjects_enroll")
 async def enroll(
     subject_id: uuid.UUID, current_user: CurrentUser, db: DBSession
 ) -> EnrollmentResponse:
@@ -64,7 +64,7 @@ async def enroll(
     return EnrollmentResponse.model_validate(enrollment)
 
 
-@router.delete("/{subject_id}/enroll", status_code=204)
+@router.delete("/{subject_id}/enroll", status_code=204, operation_id="subjects_unenroll")
 async def unenroll(
     subject_id: uuid.UUID, current_user: CurrentUser, db: DBSession
 ) -> None:

@@ -17,7 +17,7 @@ from app.services import question_sets_service
 router = APIRouter()
 
 
-@router.get("/me", response_model=QuestionSetListResponse)
+@router.get("/me", response_model=QuestionSetListResponse, operation_id="question_sets_list_mine")
 async def list_my_question_sets(
     current_user: CurrentUser,
     db: DBSession,
@@ -37,7 +37,7 @@ async def list_my_question_sets(
     )
 
 
-@router.get("/{qs_id}", response_model=QuestionSetWithQuestionsResponse)
+@router.get("/{qs_id}", response_model=QuestionSetWithQuestionsResponse, operation_id="question_sets_get")
 async def get_question_set(
     qs_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuestionSetWithQuestionsResponse:
@@ -75,7 +75,7 @@ async def get_question_set(
     )
 
 
-@router.patch("/{qs_id}", response_model=QuestionSetResponse)
+@router.patch("/{qs_id}", response_model=QuestionSetResponse, operation_id="question_sets_update")
 async def update_question_set(
     qs_id: UUID,
     payload: QuestionSetUpdateRequest,
@@ -88,7 +88,7 @@ async def update_question_set(
     return QuestionSetResponse.model_validate(qs)
 
 
-@router.post("/{qs_id}/publish", response_model=QuestionSetResponse)
+@router.post("/{qs_id}/publish", response_model=QuestionSetResponse, operation_id="question_sets_publish")
 async def publish_question_set(
     qs_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuestionSetResponse:
@@ -96,7 +96,7 @@ async def publish_question_set(
     return QuestionSetResponse.model_validate(qs)
 
 
-@router.post("/{qs_id}/reject", response_model=QuestionSetResponse)
+@router.post("/{qs_id}/reject", response_model=QuestionSetResponse, operation_id="question_sets_reject")
 async def reject_question_set(
     qs_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuestionSetResponse:

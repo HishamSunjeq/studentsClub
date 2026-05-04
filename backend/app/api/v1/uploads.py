@@ -9,7 +9,7 @@ from app.services import uploads_service
 router = APIRouter()
 
 
-@router.post("", status_code=status.HTTP_201_CREATED, response_model=PresignResponse)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=PresignResponse, operation_id="uploads_create")
 async def create_upload(
     payload: UploadCreateRequest,
     current_user: CurrentUser,
@@ -18,7 +18,7 @@ async def create_upload(
     return await uploads_service.create_upload(db=db, user=current_user, payload=payload)
 
 
-@router.post("/{upload_id}/finalize", response_model=UploadResponse)
+@router.post("/{upload_id}/finalize", response_model=UploadResponse, operation_id="uploads_finalize")
 async def finalize_upload(
     upload_id: UUID,
     current_user: CurrentUser,
@@ -30,7 +30,7 @@ async def finalize_upload(
     return UploadResponse.model_validate(upload)
 
 
-@router.get("/{upload_id}", response_model=UploadResponse)
+@router.get("/{upload_id}", response_model=UploadResponse, operation_id="uploads_get")
 async def get_upload(
     upload_id: UUID,
     current_user: CurrentUser,

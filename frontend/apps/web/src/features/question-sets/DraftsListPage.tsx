@@ -1,7 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router";
+import { useQuestionSetsListMine } from "@/api/generated/endpoints/question-sets/question-sets";
 import { useAuthStore } from "@/features/auth/auth.store";
-import { fetchMyQuestionSets } from "@/features/question-sets/question-sets.api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -26,10 +25,7 @@ export default function DraftsListPage() {
     return null;
   }
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["question-sets/me"],
-    queryFn: () => fetchMyQuestionSets({ size: 50 }),
-  });
+  const { data, isLoading, error } = useQuestionSetsListMine({ size: 50 });
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">

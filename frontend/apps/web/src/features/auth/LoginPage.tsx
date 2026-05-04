@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { fetchMe, login } from "@/features/auth/auth.api";
-import { useAuthStore } from "@/features/auth/auth.store";
+import { authLogin } from "@/api/generated/endpoints/auth/auth";
+import { usersGetMe } from "@/api/generated/endpoints/users/users";
+import { useAuthStore, type AuthUser } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,10 +22,10 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const tokens = await login({ email, password });
+      const tokens = await authLogin({ email, password });
       setTokens(tokens.access_token, tokens.refresh_token);
-      const me = await fetchMe();
-      setUser(me);
+      const me = await usersGetMe();
+      setUser(me as AuthUser);
       navigate("/");
     } catch {
       setError("Invalid email or password");

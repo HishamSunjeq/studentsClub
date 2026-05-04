@@ -1,13 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
-import { useAuthStore } from "@/features/auth/auth.store";
 import {
-  deactivateQuestion,
-  fetchQuestionSet,
-  publishQuestionSet,
-  rejectQuestionSet,
-  type Question,
-} from "@/features/question-sets/question-sets.api";
+  getQuestionSetsGetQueryKey,
+  getQuestionSetsListMineQueryKey,
+  useQuestionSetsGet,
+  useQuestionSetsPublish,
+  useQuestionSetsReject,
+} from "@/api/generated/endpoints/question-sets/question-sets";
+import { useQuestionsDeactivate } from "@/api/generated/endpoints/questions/questions";
+import type { QuestionResponse } from "@/api/generated/schemas";
+import { useAuthStore } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -33,43 +35,43 @@ export default function ReviewPage() {
     return null;
   }
 
-  const { data: qs, isLoading, error } = useQuery({
-    queryKey: ["question-set", id],
-    queryFn: () => fetchQuestionSet(id),
-  });
+  const { data: qs, isLoading, error } = useQuestionSetsGet(id);
 
   function invalidate() {
-    queryClient.invalidateQueries({ queryKey: ["question-set", id] });
-    queryClient.invalidateQueries({ queryKey: ["question-sets/me"] });
+    void queryClient.invalidateQueries({ queryKey: getQuestionSetsGetQueryKey(id!) });
+    void queryClient.invalidateQueries({ queryKey: getQuestionSetsListMineQueryKey() });
   }
 
-  const publishMutation = useMutation({
-    mutationFn: () => publishQuestionSet(id!),
-    onSuccess: () => {
-      toast.success("Published");
-      invalidate();
-    },
-    onError: (err: { response?: { data?: { detail?: string } } }) => {
-      toast.error(err.response?.data?.detail ?? "Failed to publish");
+  const publishMutation = useQuestionSetsPublish({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Published");
+        invalidate();
+      },
+      onError: (err: { response?: { data?: { detail?: string } } }) => {
+        toast.error(err.response?.data?.detail ?? "Failed to publish");
+      },
     },
   });
 
-  const rejectMutation = useMutation({
-    mutationFn: () => rejectQuestionSet(id!),
-    onSuccess: () => {
-      toast.success("Rejected");
-      invalidate();
+  const rejectMutation = useQuestionSetsReject({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Rejected");
+        invalidate();
+      },
+      onError: () => toast.error("Failed to reject"),
     },
-    onError: () => toast.error("Failed to reject"),
   });
 
-  const deactivateMutation = useMutation({
-    mutationFn: (questionId: string) => deactivateQuestion(questionId),
-    onSuccess: () => {
-      toast.success("Question removed");
-      invalidate();
+  const deactivateMutation = useQuestionsDeactivate({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Question removed");
+        invalidate();
+      },
+      onError: () => toast.error("Failed to remove"),
     },
-    onError: () => toast.error("Failed to remove"),
   });
 
   if (isLoading) {
@@ -102,14 +104,14 @@ export default function ReviewPage() {
         {isDraft && (
           <div className="flex flex-wrap gap-2">
             <Button
-              onClick={() => publishMutation.mutate()}
+              onClick={() => publishMutation.mutate({ qsId: id })}
               disabled={publishMutation.isPending || activeCount === 0}
             >
               Publish
             </Button>
             <Button
               variant="outline"
-              onClick={() => rejectMutation.mutate()}
+              onClick={() => rejectMutation.mutate({ qsId: id })}
               disabled={rejectMutation.isPending}
             >
               Reject set
@@ -128,7 +130,7 @@ export default function ReviewPage() {
               key={q.id}
               q={q}
               isDraft={isDraft}
-              onDeactivate={() => deactivateMutation.mutate(q.id)}
+              onDeactivate={() => deactivateMutation.mutate({ questionId: q.id })}
               disabled={deactivateMutation.isPending}
             />
           ))}
@@ -144,7 +146,7 @@ function QuestionCard({
   onDeactivate,
   disabled,
 }: {
-  q: Question;
+  q: QuestionResponse;
   isDraft: boolean;
   onDeactivate: () => void;
   disabled: boolean;

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { fetchMe, register } from "@/features/auth/auth.api";
-import { useAuthStore } from "@/features/auth/auth.store";
+import { authRegister } from "@/api/generated/endpoints/auth/auth";
+import { usersGetMe } from "@/api/generated/endpoints/users/users";
+import { useAuthStore, type AuthUser } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,13 +31,13 @@ export default function RegisterPage() {
     setError(null);
     setLoading(true);
     try {
-      const tokens = await register({
+      const tokens = await authRegister({
         ...form,
         academic_year: Number(form.academic_year),
       });
       setTokens(tokens.access_token, tokens.refresh_token);
-      const me = await fetchMe();
-      setUser(me);
+      const me = await usersGetMe();
+      setUser(me as AuthUser);
       navigate("/");
     } catch (err: unknown) {
       if (
