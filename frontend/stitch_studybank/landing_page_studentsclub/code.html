@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudentsClub - Academic AI Learning</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-container-low": "#1c1b1b",
+                  "on-primary-container": "#dad7ff",
+                  "on-surface": "#e5e2e1",
+                  "surface-container": "#201f1f",
+                  "tertiary-fixed": "#ffdbcc",
+                  "primary": "#c3c0ff",
+                  "tertiary-fixed-dim": "#ffb695",
+                  "on-tertiary": "#571f00",
+                  "on-error-container": "#ffdad6",
+                  "on-primary-fixed-variant": "#3323cc",
+                  "on-tertiary-fixed-variant": "#7b2f00",
+                  "on-background": "#e5e2e1",
+                  "on-secondary-fixed": "#002113",
+                  "surface-bright": "#3a3939",
+                  "on-secondary": "#003824",
+                  "primary-fixed-dim": "#c3c0ff",
+                  "inverse-primary": "#4d44e3",
+                  "secondary-fixed": "#6ffbbe",
+                  "on-primary-fixed": "#0f0069",
+                  "surface-dim": "#131313",
+                  "surface-tint": "#c3c0ff",
+                  "error-container": "#93000a",
+                  "surface-container-high": "#2a2a2a",
+                  "inverse-on-surface": "#313030",
+                  "on-primary": "#1d00a5",
+                  "tertiary": "#ffb695",
+                  "primary-fixed": "#e2dfff",
+                  "on-secondary-container": "#00311f",
+                  "on-tertiary-container": "#ffd2be",
+                  "tertiary-container": "#a44100",
+                  "secondary": "#4edea3",
+                  "surface-container-lowest": "#0e0e0e",
+                  "surface-container-highest": "#353534",
+                  "on-surface-variant": "#c7c4d8",
+                  "on-tertiary-fixed": "#351000",
+                  "inverse-surface": "#e5e2e1",
+                  "background": "#131313",
+                  "outline": "#918fa1",
+                  "outline-variant": "#464555",
+                  "error": "#ffb4ab",
+                  "surface": "#131313",
+                  "primary-container": "#4f46e5",
+                  "secondary-fixed-dim": "#4edea3",
+                  "on-error": "#690005",
+                  "on-secondary-fixed-variant": "#005236",
+                  "secondary-container": "#00a572",
+                  "surface-variant": "#353534"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.5rem",
+                  "lg": "0.875rem",
+                  "xl": "0.75rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "sm": "12px",
+                  "xs": "8px",
+                  "lg": "40px",
+                  "md": "24px",
+                  "xl": "64px",
+                  "sidebar-width": "260px",
+                  "container-max": "1200px",
+                  "base": "4px"
+          },
+          "fontFamily": {
+                  "ui-small": ["Inter", "sans-serif"],
+                  "study-quote": ["Newsreader", "serif"],
+                  "h1": ["Inter", "sans-serif"],
+                  "ui-medium": ["Inter", "sans-serif"],
+                  "caption": ["Inter", "sans-serif"],
+                  "display-xl": ["Inter", "sans-serif"],
+                  "h2": ["Inter", "sans-serif"],
+                  "study-body": ["Newsreader", "serif"]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- Shared Component: TopNavBar (Exact, unmodified inclusion per strict guidelines) -->
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-[#131221] dark group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+<div class="layout-container flex h-full grow flex-col">
+<div class="px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#272546] px-10 py-3">
+<div class="flex items-center gap-4 text-white">
+<div class="size-4">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M39.5563 34.1455V13.8546C39.5563 15.708 36.8773 17.3437 32.7927 18.3189C30.2914 18.916 27.263 19.2655 24 19.2655C20.737 19.2655 17.7086 18.916 15.2073 18.3189C11.1227 17.3437 8.44365 15.708 8.44365 13.8546V34.1455C8.44365 35.9988 11.1227 37.6346 15.2073 38.6098C17.7086 39.2069 20.737 39.5564 24 39.5564C27.263 39.5564 30.2914 39.2069 32.7927 38.6098C36.8773 37.6346 39.5563 35.9988 39.5563 34.1455Z" fill="currentColor"></path>
+<path clip-rule="evenodd" d="M10.4485 13.8519C10.4749 13.9271 10.6203 14.246 11.379 14.7361C12.298 15.3298 13.7492 15.9145 15.6717 16.3735C18.0007 16.9296 20.8712 17.2655 24 17.2655C27.1288 17.2655 29.9993 16.9296 32.3283 16.3735C34.2508 15.9145 35.702 15.3298 36.621 14.7361C37.3796 14.246 37.5251 13.9271 37.5515 13.8519C37.5287 13.7876 37.4333 13.5973 37.0635 13.2931C36.5266 12.8516 35.6288 12.3647 34.343 11.9175C31.79 11.0295 28.1333 10.4437 24 10.4437C19.8667 10.4437 16.2099 11.0295 13.657 11.9175C12.3712 12.3647 11.4734 12.8516 10.9365 13.2931C10.5667 13.5973 10.4713 13.7876 10.4485 13.8519ZM37.5563 18.7877C36.3176 19.3925 34.8502 19.8839 33.2571 20.2642C30.5836 20.9025 27.3973 21.2655 24 21.2655C20.6027 21.2655 17.4164 20.9025 14.7429 20.2642C13.1498 19.8839 11.6824 19.3925 10.4436 18.7877V34.1275C10.4515 34.1545 10.5427 34.4867 11.379 35.027C12.298 35.6207 13.7492 36.2054 15.6717 36.6644C18.0007 37.2205 20.8712 37.5564 24 37.5564C27.1288 37.5564 29.9993 37.2205 32.3283 36.6644C34.2508 36.2054 35.702 35.6207 36.621 35.027C37.4573 34.4867 37.5485 34.1546 37.5563 34.1275V18.7877ZM41.5563 13.8546V34.1455C41.5563 36.1078 40.158 37.5042 38.7915 38.3869C37.3498 39.3182 35.4192 40.0389 33.2571 40.5551C30.5836 41.1934 27.3973 41.5564 24 41.5564C20.6027 41.5564 17.4164 41.1934 14.7429 40.5551C12.5808 40.0389 10.6502 39.3182 9.20848 38.3869C7.84205 37.5042 6.44365 36.1078 6.44365 34.1455L6.44365 13.8546C6.44365 12.2684 7.37223 11.0454 8.39581 10.2036C9.43325 9.3505 10.8137 8.67141 12.343 8.13948C15.4203 7.06909 19.5418 6.44366 24 6.44366C28.4582 6.44366 32.5797 7.06909 35.657 8.13948C37.1863 8.67141 38.5667 9.3505 39.6042 10.2036C40.6278 11.0454 41.5563 12.2684 41.5563 13.8546Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">StudentsClub</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8">
+<div class="flex items-center gap-9">
+<a class="text-white text-sm font-medium leading-normal" href="#">How it works</a>
+<a class="text-white text-sm font-medium leading-normal" href="#">Pricing</a>
+</div>
+<div class="flex gap-2">
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#4e46e5] text-white text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Get started</span>
+</button>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#272546] text-white text-sm font-bold leading-normal tracking-[0.015em]">
+<span class="truncate">Log in</span>
+</button>
+</div>
+</div>
+</header>
+<div class="@container">
+<div class="@[480px]:p-4">
+<div class="flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-center justify-center p-4" data-alt="A sophisticated abstract visual representation of academic focus and AI intelligence in a true neutral, near-black dark mode environment. The background features subtle, elegant structural grids overlaid with soft, deeply tonal indigo glowing elements indicating AI generation. The aesthetic is clean, professional, and minimalist, emphasizing high-trust intellectual study spaces without any distracting colors or playful shapes, maintaining strict adherence to the brand's 'quiet focus' ethos." style='background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuDWHLxqVuVwkrvlp2VQktmaPHvUKSpRkOr9LcQuxyzWWTFR9xJTJrkPkwCJlzoxKKno73rHhbxFUzepMUQwCs-HbjmdgLnKTLkCD_ZijpFl7vY1ZhY42BaTPj3puyY_GbFzfYPyXZon2bLGW1WFdRolmI-EqzpRI5tBsqryNkGuSkinx2aQRKu_OmKD741AMDUXdbgRxOzAXxWVYv2uX8IoEjhtX1BA_muR9VCHG6GFNIsEbj2BydTiAixJ4agKH7T0H9W1mqb_AtQ");'>
+<div class="flex flex-col gap-2 text-center">
+<h1 class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]">
+                      Turn your notes into questions. Practice with your class.
+                    </h1>
+<h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                      AI-powered collaborative learning for students.
+                    </h2>
+</div>
+<button class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#4e46e5] text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
+<span class="truncate">Get started</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-4 p-4">
+<div class="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-[#383663]">
+<p class="text-white text-base font-medium leading-normal">Questions generated this week</p>
+<p class="text-white tracking-light text-2xl font-bold leading-tight">12,840</p>
+</div>
+</div>
+<div class="flex flex-col gap-10 px-4 py-10 @container">
+<div class="flex flex-col gap-4">
+<h1 class="text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px]">
+                  How it works
+                </h1>
+<p class="text-white text-base font-normal leading-normal max-w-[720px]">Three simple steps to transform your study routine.</p>
+</div>
+<div class="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-0">
+<div class="flex flex-1 gap-3 rounded-lg border border-[#383663] bg-[#1c1b32] p-4 flex-col">
+<div class="text-white" data-icon="UploadSimple" data-size="24px" data-weight="regular">
+<svg fill="currentColor" height="24px" viewbox="0 0 256 256" width="24px" xmlns="http://www.w3.org/2000/svg">
+<path d="M224,152v56a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V152a8,8,0,0,1,16,0v56H208V152a8,8,0,0,1,16,0ZM93.66,85.66,120,59.31V152a8,8,0,0,0,16,0V59.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,85.66Z"></path>
+</svg>
+</div>
+<div class="flex flex-col gap-1">
+<h2 class="text-white text-base font-bold leading-tight">Upload notes</h2>
+<p class="text-[#9795c6] text-sm font-normal leading-normal">Upload your lecture notes or slides in any format.</p>
+</div>
+</div>
+<div class="flex flex-1 gap-3 rounded-lg border border-[#383663] bg-[#1c1b32] p-4 flex-col">
+<div class="text-white" data-icon="Sparkle" data-size="24px" data-weight="regular">
+<svg fill="currentColor" height="24px" viewbox="0 0 256 256" width="24px" xmlns="http://www.w3.org/2000/svg">
+<path d="M197.58,129.06l-51.61-19-19-51.65a15.92,15.92,0,0,0-29.88,0L78.07,110l-51.65,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0l19-51.61,51.65-19a15.92,15.92,0,0,0,0-29.88ZM140.39,163a15.87,15.87,0,0,0-9.43,9.43l-19,51.46L93,172.39A15.87,15.87,0,0,0,83.61,163h0L32.15,144l51.46-19A15.87,15.87,0,0,0,93,115.61l19-51.46,19,51.46a15.87,15.87,0,0,0,9.43,9.43l51.46,19ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"></path>
+</svg>
+</div>
+<div class="flex flex-col gap-1">
+<h2 class="text-white text-base font-bold leading-tight">AI generates drafts</h2>
+<p class="text-[#9795c6] text-sm font-normal leading-normal">Our AI creates practice questions and flashcards from your material.</p>
+</div>
+</div>
+<div class="flex flex-1 gap-3 rounded-lg border border-[#383663] bg-[#1c1b32] p-4 flex-col">
+<div class="text-white" data-icon="Users" data-size="24px" data-weight="regular">
+<svg fill="currentColor" height="24px" viewbox="0 0 256 256" width="24px" xmlns="http://www.w3.org/2000/svg">
+<path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.14,98.7a8,8,0,0,1-11.07-2.33A79.83,79.83,0,0,0,172,168a8,8,0,0,1,0-16,44,44,0,1,0-16.34-84.87,8,8,0,1,1-5.94-14.85,60,60,0,0,1,55.53,105.64,95.83,95.83,0,0,1,47.22,37.71A8,8,0,0,1,250.14,206.7Z"></path>
+</svg>
+</div>
+<div class="flex flex-col gap-1">
+<h2 class="text-white text-base font-bold leading-tight">Practice together</h2>
+<p class="text-[#9795c6] text-sm font-normal leading-normal">Study and practice with your classmates in real-time.</p>
+</div>
+</div>
+</div>
+</div>
+<h4 class="text-[#9795c6] text-sm font-bold leading-normal tracking-[0.015em] px-4 py-2 text-center">Trusted by students from</h4>
+<!-- New Section: Trust Signals (Added strictly within Design System guidelines below the text) -->
+<div class="flex flex-wrap items-center justify-center gap-12 px-6 py-6 opacity-60 grayscale filter mb-16">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant">school</span>
+<span class="font-h2 text-xl font-semibold text-on-surface-variant uppercase tracking-widest">Stanford</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant">account_balance</span>
+<span class="font-h2 text-xl font-semibold text-on-surface-variant uppercase tracking-widest">MIT</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant">history_edu</span>
+<span class="font-h2 text-xl font-semibold text-on-surface-variant uppercase tracking-widest">Harvard</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[32px] text-on-surface-variant">menu_book</span>
+<span class="font-h2 text-xl font-semibold text-on-surface-variant uppercase tracking-widest">Oxford</span>
+</div>
+</div>
+<!-- New Section: Footer Component leveraging Design System Tokens -->
+<footer class="w-full border-t border-outline-variant bg-surface-container-low px-10 py-12">
+<div class="mx-auto flex max-w-container-max flex-col gap-8 md:flex-row md:justify-between">
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">auto_stories</span>
+<span class="font-h2 text-xl font-semibold text-on-surface">StudentsClub</span>
+</div>
+<p class="max-w-xs font-ui-small text-on-surface-variant">
+        The premium AI-powered study platform designed for serious learners. Achieve structural clarity and quiet focus.
+      </p>
+</div>
+<div class="flex gap-16 font-ui-medium text-sm">
+<div class="flex flex-col gap-3">
+<span class="font-bold text-on-surface">Product</span>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">How it works</a>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Features</a>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Pricing</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-bold text-on-surface">Resources</span>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Help Center</a>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Academic Journal</a>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Community</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="font-bold text-on-surface">Legal</span>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Privacy</a>
+<a class="text-on-surface-variant transition-colors hover:text-primary" href="#">Terms</a>
+</div>
+</div>
+</div>
+<div class="mx-auto mt-12 max-w-container-max border-t border-outline-variant pt-8 text-center md:text-left">
+<p class="font-caption text-on-surface-variant">© 2024 StudentsClub. All rights reserved.</p>
+</div>
+</footer>
+</div>
+</div>
+</div>
+</div>
+</body></html>

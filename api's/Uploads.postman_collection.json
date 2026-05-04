@@ -1,0 +1,84 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0005-4000-8000-000000000005",
+    "name": "Uploads",
+    "description": "File upload endpoints — create presigned URL, finalize, and retrieve uploads.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Upload (Get Presigned URL)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.upload_id) {",
+              "  pm.environment.set('upload_id', json.upload_id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"filename\": \"lecture_notes.pdf\",\n  \"content_type\": \"application/pdf\",\n  \"size_bytes\": 204800,\n  \"subject_id\": \"{{subject_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/uploads",
+          "host": ["{{base_url}}"],
+          "path": ["uploads"]
+        },
+        "description": "Initiate an upload. Returns a presigned S3 URL to PUT the file directly, plus the `upload_id`.\n\n**Requires:** Bearer token\n\n**Body fields:**\n- `filename` — original filename\n- `content_type` — must be an allowed MIME type (e.g. `application/pdf`)\n- `size_bytes` — file size in bytes\n- `subject_id` *(optional)* — associate with a subject\n\n**Workflow:** PUT the file to `presigned_url`, then call **Finalize Upload**.\n\n**Returns:** `PresignResponse` (201)"
+      },
+      "response": []
+    },
+    {
+      "name": "Finalize Upload",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/uploads/{{upload_id}}/finalize",
+          "host": ["{{base_url}}"],
+          "path": ["uploads", "{{upload_id}}", "finalize"]
+        },
+        "description": "Mark an upload as finalized after the file has been PUT to S3. This triggers background processing (question extraction).\n\n**Requires:** Bearer token\n\n**Path params:**\n- `upload_id` — UUID returned by Create Upload\n\n**Returns:** `UploadResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Upload",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/uploads/{{upload_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["uploads", "{{upload_id}}"]
+        },
+        "description": "Retrieve metadata for a specific upload.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `upload_id` — UUID\n\n**Returns:** `UploadResponse` (200)"
+      },
+      "response": []
+    }
+  ]
+}

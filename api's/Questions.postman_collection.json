@@ -1,0 +1,52 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "name": "Questions",
+    "description": "Individual question management — update content or deactivate a question.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Update Question",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"What is the capital of France?\",\n  \"explanation\": \"Paris has been the capital since the 10th century.\",\n  \"difficulty\": \"easy\",\n  \"choices\": [\n    { \"text\": \"Paris\", \"is_correct\": true },\n    { \"text\": \"Lyon\", \"is_correct\": false },\n    { \"text\": \"Marseille\", \"is_correct\": false },\n    { \"text\": \"Toulouse\", \"is_correct\": false }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/questions/{{question_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["questions", "{{question_id}}"]
+        },
+        "description": "Update a question's text, explanation, difficulty, and/or choices.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Body fields (all optional):**\n- `text` — question text\n- `explanation` — explanation shown after answering\n- `difficulty` — `easy` | `medium` | `hard`\n- `choices` — exactly 4 choices, exactly 1 must have `is_correct: true`\n\n**Returns:** `QuestionResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Deactivate Question",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/questions/{{question_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["questions", "{{question_id}}"]
+        },
+        "description": "Soft-delete (deactivate) a question so it no longer appears in quizzes.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** 204 No Content"
+      },
+      "response": []
+    }
+  ]
+}

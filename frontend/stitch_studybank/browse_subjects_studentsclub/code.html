@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>StudentsClub - Subjects</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Newsreader:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "secondary-fixed": "#6ffbbe",
+                            "on-primary-fixed-variant": "#3323cc",
+                            "on-secondary-container": "#00311f",
+                            "primary": "#c3c0ff",
+                            "on-surface": "#e5e2e1",
+                            "secondary": "#4edea3",
+                            "on-secondary-fixed": "#002113",
+                            "background": "#131313",
+                            "surface-container-highest": "#353534",
+                            "on-tertiary-container": "#ffd2be",
+                            "primary-fixed-dim": "#c3c0ff",
+                            "on-tertiary-fixed-variant": "#7b2f00",
+                            "on-primary-container": "#dad7ff",
+                            "inverse-primary": "#4d44e3",
+                            "surface-tint": "#c3c0ff",
+                            "secondary-container": "#00a572",
+                            "surface-container-high": "#2a2a2a",
+                            "primary-fixed": "#e2dfff",
+                            "on-primary-fixed": "#0f0069",
+                            "surface-variant": "#353534",
+                            "surface-container-lowest": "#0e0e0e",
+                            "on-primary": "#1d00a5",
+                            "surface-bright": "#3a3939",
+                            "on-error-container": "#ffdad6",
+                            "on-error": "#690005",
+                            "on-tertiary-fixed": "#351000",
+                            "surface-container": "#201f1f",
+                            "outline-variant": "#464555",
+                            "secondary-fixed-dim": "#4edea3",
+                            "tertiary": "#ffb695",
+                            "error-container": "#93000a",
+                            "on-tertiary": "#571f00",
+                            "error": "#ffb4ab",
+                            "on-secondary": "#003824",
+                            "surface-dim": "#131313",
+                            "inverse-on-surface": "#313030",
+                            "tertiary-container": "#a44100",
+                            "primary-container": "#4f46e5",
+                            "on-secondary-fixed-variant": "#005236",
+                            "tertiary-fixed": "#ffdbcc",
+                            "surface-container-low": "#1c1b1b",
+                            "on-background": "#e5e2e1",
+                            "surface": "#131313",
+                            "outline": "#918fa1",
+                            "inverse-surface": "#e5e2e1",
+                            "tertiary-fixed-dim": "#ffb695",
+                            "on-surface-variant": "#c7c4d8"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "sidebar-width": "260px",
+                            "xl": "64px",
+                            "base": "4px",
+                            "lg": "40px",
+                            "xs": "8px",
+                            "sm": "12px",
+                            "container-max": "1200px",
+                            "md": "24px"
+                    },
+                    "fontFamily": {
+                            "display-xl": ["Inter"],
+                            "study-quote": ["Newsreader"],
+                            "study-body": ["Newsreader"],
+                            "h2": ["Inter"],
+                            "h1": ["Inter"],
+                            "caption": ["Inter"],
+                            "ui-small": ["Inter"],
+                            "ui-medium": ["Inter"]
+                    },
+                    "fontSize": {
+                            "display-xl": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                            "study-quote": ["20px", { "lineHeight": "1.5", "fontWeight": "400" }],
+                            "study-body": ["18px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                            "h2": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                            "h1": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                            "caption": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                            "ui-small": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                            "ui-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col font-display-xl text-display-xl">
+<!-- TopNavBar -->
+<header class="bg-neutral-950/80 backdrop-blur-md text-indigo-600 dark:text-indigo-400 font-sans antialiased tracking-tight docked full-width top-0 sticky z-50 border-b border-neutral-800 flat no shadows flex justify-between items-center w-full px-6 py-3 max-w-[1200px] mx-auto">
+<div class="flex items-center gap-6">
+<span class="text-xl font-bold tracking-tighter text-neutral-100">StudentsClub</span>
+<nav class="hidden md:flex space-x-6">
+<a class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Explore</a>
+<a class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Pricing</a>
+<a class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Library</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="hidden md:flex bg-[#171717] text-indigo-500 font-sans text-sm font-medium docked left-0 h-screen w-64 fixed border-r border-[#262626] flat no shadows flex flex-col h-full py-6 px-4 space-y-2 z-40 mt-[61px]">
+<div class="mb-8 px-4 flex flex-col">
+<span class="text-lg font-black text-neutral-100">StudentsClub</span>
+<span class="text-xs text-neutral-500">Academic Pro</span>
+</div>
+<button class="bg-primary-container text-on-primary-container rounded-lg py-2 px-4 mb-6 hover:opacity-90 transition-opacity font-ui-medium text-ui-medium text-center shadow-sm w-full">
+                New Study Session
+            </button>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg bg-neutral-800 text-indigo-400 border-r-2 border-indigo-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="menu_book">menu_book</span>
+                    Subjects
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="cloud_upload">cloud_upload</span>
+                    Upload
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="description">description</span>
+                    Drafts
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="quiz">quiz</span>
+                    Quiz
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="history">history</span>
+                    History
+                </a>
+</nav>
+<div class="mt-auto space-y-1 pt-4 border-t border-[#262626]">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="help">help</span>
+                    Support
+                </a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[260px] overflow-y-auto w-full max-w-[1200px] mx-auto px-6 py-lg">
+<!-- Header & Search -->
+<div class="mb-lg space-y-6">
+<h1 class="font-h1 text-h1 text-on-surface">Subjects</h1>
+<div class="relative max-w-2xl">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full bg-surface-container-high border border-outline-variant rounded-lg py-3 pl-12 pr-4 text-on-surface font-ui-medium text-ui-medium focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant" placeholder="Search subjects, codes, or colleges" type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex flex-wrap gap-sm">
+<button class="px-4 py-1.5 rounded-full bg-primary-container text-on-primary-container font-ui-small text-ui-small transition-colors">All Subjects</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-ui-small text-ui-small hover:bg-surface-container-high transition-colors">Enrolled</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-ui-small text-ui-small hover:bg-surface-container-high transition-colors">Popular</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-ui-small text-ui-small hover:bg-surface-container-high transition-colors">Recent</button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container border border-outline-variant text-on-surface-variant font-ui-small text-ui-small hover:bg-surface-container-high transition-colors">Exam Prep</button>
+</div>
+</div>
+<div class="flex flex-col lg:flex-row gap-lg">
+<!-- Inner Sidebar (Filters) -->
+<div class="hidden lg:block w-[240px] shrink-0 space-y-8">
+<div>
+<h3 class="font-ui-medium text-ui-medium text-on-surface mb-sm">Academic Year</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Freshman</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Sophomore</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Junior</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Senior</span>
+</label>
+</div>
+</div>
+<div>
+<h3 class="font-ui-medium text-ui-medium text-on-surface mb-sm">Difficulty Level</h3>
+<div class="space-y-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Introductory</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Intermediate</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="rounded border-outline-variant bg-surface-container text-primary focus:ring-primary/50 focus:ring-offset-background" type="checkbox"/>
+<span class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface transition-colors">Advanced</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Subject Grid -->
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Card 1 -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-[32px] flex flex-col hover:border-outline-variant transition-colors group">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-ui-small text-ui-small text-primary px-2 py-1 bg-primary/10 rounded-md">BIO-402</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-ui-small text-[10px] uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Enrolled
+                            </span>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface mb-xs group-hover:text-primary transition-colors">Advanced Cellular Biology</h2>
+<p class="font-study-body text-study-body text-on-surface-variant mb-md line-clamp-2">In-depth study of cellular structures, organelles, and their functions in eukaryotic systems.</p>
+<div class="mt-auto pt-md border-t border-[#262626] flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="group">group</span>
+<span class="font-caption text-caption">1.2k</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="library_books">library_books</span>
+<span class="font-caption text-caption">45 sets</span>
+</div>
+</div>
+<img alt="Contributor" class="w-6 h-6 rounded-full border border-[#262626]" data-alt="A small, professional avatar portrait of a student or academic contributor, styled in a dark mode UI context with minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn3ZcAocGQ7P0pKT4nICZHuA6y0h-fzOVuIdDHnIfu5ZN_tBpxe2VYwH3DqLoXssesyARprIfF-PfECtIgRGI2fXf-OtkPORcysPmhEMWxQ0nvi4iY8youEZ4cN4shxqHNmv3M_ql_4wuX3ERzVBXPKywb5SaFJtFLzJfYUiCs8w3uHieurd43Qvy4yAT1GnU6h3SRS0XR7CNPaBNODPImYaji8ERcLGJQ_1V9Y8Tk_lVGg4C7PMk5TJ5CVC6oTNZgoC2IO6ZK1T8"/>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-[32px] flex flex-col hover:border-outline-variant transition-colors group">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-ui-small text-ui-small text-primary px-2 py-1 bg-primary/10 rounded-md">ECO-101</span>
+<button class="font-ui-small text-ui-small text-on-surface bg-surface-container border border-outline-variant rounded-full px-3 py-1 hover:bg-surface-container-high transition-colors">
+                                Join
+                            </button>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface mb-xs group-hover:text-primary transition-colors">Macroeconomics 101</h2>
+<p class="font-study-body text-study-body text-on-surface-variant mb-md line-clamp-2">Foundational principles of macroeconomics, focusing on national income, employment, and monetary policy.</p>
+<div class="mt-auto pt-md border-t border-[#262626] flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="group">group</span>
+<span class="font-caption text-caption">3.4k</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="library_books">library_books</span>
+<span class="font-caption text-caption">120 sets</span>
+</div>
+</div>
+<img alt="Contributor" class="w-6 h-6 rounded-full border border-[#262626]" data-alt="A small, professional avatar portrait of a student or academic contributor, styled in a dark mode UI context with minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_j-0xLylDSP3yhBy34Yl_2sNx3rTgzCckwwTtcjVR4oW-fuPvR6aWlMe3ErfgJ-hp_wX7y-C_vUEvbOM2qTukTmHgOis_0m0K9Zp-HeQgAHg-JNbvT3ZZPIcNiDu3batwW88P-LzYtODy1Infwa5HeUVDTB6geIABMBy4E8JN8dI-xW-KEQ1A_w1UEWrFdIlvmIrXuxPv-gpHLDp7ImLJGUqYtKc7k-ku7Q4IpR-cb-EVUyUtcsO_-eJ5oYVirtiSxZZNatTMMqE"/>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-[32px] flex flex-col hover:border-outline-variant transition-colors group">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-ui-small text-ui-small text-primary px-2 py-1 bg-primary/10 rounded-md">PHY-205</span>
+<button class="font-ui-small text-ui-small text-on-surface bg-surface-container border border-outline-variant rounded-full px-3 py-1 hover:bg-surface-container-high transition-colors">
+                                Join
+                            </button>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface mb-xs group-hover:text-primary transition-colors">Quantum Mechanics I</h2>
+<p class="font-study-body text-study-body text-on-surface-variant mb-md line-clamp-2">Introduction to quantum theory, wave functions, and the Schrödinger equation.</p>
+<div class="mt-auto pt-md border-t border-[#262626] flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="group">group</span>
+<span class="font-caption text-caption">850</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="library_books">library_books</span>
+<span class="font-caption text-caption">32 sets</span>
+</div>
+</div>
+<img alt="Contributor" class="w-6 h-6 rounded-full border border-[#262626]" data-alt="A small, professional avatar portrait of a student or academic contributor, styled in a dark mode UI context with minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAjanPYLTwAoWkRydUq9tFPxC2NI_sziZLB70tN06kl_3AyrSTAUtrua-v5ChoTGEa9P1DqhD1qx74sOeeXg9Zo3XnnprvPiFU1VkSdVzBIk-bA99KhEEmo7K35I6hXrHp8KyXdc0nAPTM2WF0zAIJvxU7J9_ccfihpt08d8E86SDHxsSr3XKyqkGcyIMNZldQ4OPd5fI-12P750UWSlxJrTTpK4xTClr5iBv8miq6_5cUwLSXiMyU0nh1KnCqjhU6Iv-QwPT59HpI"/>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-[32px] flex flex-col hover:border-outline-variant transition-colors group">
+<div class="flex justify-between items-start mb-sm">
+<span class="font-ui-small text-ui-small text-primary px-2 py-1 bg-primary/10 rounded-md">LIT-310</span>
+<span class="px-2 py-1 rounded-full bg-surface-container-high border border-outline-variant text-on-surface-variant font-ui-small text-[10px] uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                                Enrolled
+                            </span>
+</div>
+<h2 class="font-h2 text-h2 text-on-surface mb-xs group-hover:text-primary transition-colors">Modernist Literature</h2>
+<p class="font-study-body text-study-body text-on-surface-variant mb-md line-clamp-2">Exploration of early 20th-century literary movements, focusing on Joyce, Woolf, and Eliot.</p>
+<div class="mt-auto pt-md border-t border-[#262626] flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="group">group</span>
+<span class="font-caption text-caption">2.1k</span>
+</div>
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]" data-icon="library_books">library_books</span>
+<span class="font-caption text-caption">68 sets</span>
+</div>
+</div>
+<img alt="Contributor" class="w-6 h-6 rounded-full border border-[#262626]" data-alt="A small, professional avatar portrait of a student or academic contributor, styled in a dark mode UI context with minimal background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3zY9XVvC5inT3EILJpkcTpxUvL9ljl9AG12Hf6aIvW1BE5R_kTvpPUaDcJ24SW3afCIK_DADFplx-FOUefPfRNKcIPr-UVsvpQvPQjQOEgDQ2UVB3-nUJuYb7l43yylzrFv7fG9HqVsZp_ByqZlcJgtLKfU1ZkIAUYmCi6aSntYHz0KMLzS-peMNSX5alkzfs1tm8UJasVVQNiQqIrW4UW-odd5-a24BvBOZxFSA0aOe91q-TnJsCvOkblLEzTwLzbY9OfSRx95o"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

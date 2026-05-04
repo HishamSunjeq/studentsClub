@@ -1,0 +1,102 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0004-4000-8000-000000000004",
+    "name": "Subjects",
+    "description": "Subject listing and enrollment endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Subjects",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects?page=1&size=20",
+          "host": ["{{base_url}}"],
+          "path": ["subjects"],
+          "query": [
+            { "key": "college", "value": "", "disabled": true, "description": "Filter by college name" },
+            { "key": "academic_year", "value": "", "disabled": true, "description": "Filter by academic year (1–7)" },
+            { "key": "page", "value": "1" },
+            { "key": "size", "value": "20", "description": "Max 100" }
+          ]
+        },
+        "description": "List all subjects with optional filters.\n\n**Query params:**\n- `college` *(optional)* — filter by college\n- `academic_year` *(optional)* — 1–7\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `SubjectListResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "My Enrolled Subjects",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/me?page=1&size=20",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "me"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "size", "value": "20", "description": "Max 100" }
+          ]
+        },
+        "description": "List subjects the authenticated user is enrolled in.\n\n**Requires:** Bearer token\n\n**Returns:** `SubjectListResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Subject",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}"]
+        },
+        "description": "Retrieve a single subject by ID.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `SubjectResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Enroll in Subject",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/enroll",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "enroll"]
+        },
+        "description": "Enroll the authenticated user in a subject.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `EnrollmentResponse` (201)"
+      },
+      "response": []
+    },
+    {
+      "name": "Unenroll from Subject",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/enroll",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "enroll"]
+        },
+        "description": "Remove the authenticated user's enrollment from a subject.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** 204 No Content"
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Question Draft Reviewer - StudentsClub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Newsreader:opsz,wght@6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary": "#003824",
+                    "outline-variant": "#464555",
+                    "on-surface-variant": "#c7c4d8",
+                    "primary-fixed-dim": "#c3c0ff",
+                    "primary": "#c3c0ff",
+                    "secondary-fixed": "#6ffbbe",
+                    "surface-dim": "#131313",
+                    "surface-bright": "#3a3939",
+                    "on-primary-fixed-variant": "#3323cc",
+                    "tertiary-fixed": "#ffdbcc",
+                    "primary-container": "#4f46e5",
+                    "tertiary-fixed-dim": "#ffb695",
+                    "surface-tint": "#c3c0ff",
+                    "surface-container-low": "#1c1b1b",
+                    "surface-container-high": "#2a2a2a",
+                    "on-tertiary-container": "#ffd2be",
+                    "surface-container": "#201f1f",
+                    "surface-container-highest": "#353534",
+                    "secondary-fixed-dim": "#4edea3",
+                    "surface": "#131313",
+                    "error": "#ffb4ab",
+                    "on-surface": "#e5e2e1",
+                    "on-primary": "#1d00a5",
+                    "surface-container-lowest": "#0e0e0e",
+                    "on-secondary-fixed": "#002113",
+                    "tertiary-container": "#a44100",
+                    "on-background": "#e5e2e1",
+                    "outline": "#918fa1",
+                    "inverse-surface": "#e5e2e1",
+                    "background": "#131313",
+                    "primary-fixed": "#e2dfff",
+                    "on-primary-fixed": "#0f0069",
+                    "secondary": "#4edea3",
+                    "on-primary-container": "#dad7ff",
+                    "on-secondary-fixed-variant": "#005236",
+                    "surface-variant": "#353534",
+                    "error-container": "#93000a",
+                    "on-tertiary-fixed": "#351000",
+                    "on-secondary-container": "#00311f",
+                    "inverse-on-surface": "#313030",
+                    "tertiary": "#ffb695",
+                    "on-tertiary": "#571f00",
+                    "secondary-container": "#00a572",
+                    "on-error": "#690005",
+                    "inverse-primary": "#4d44e3",
+                    "on-error-container": "#ffdad6",
+                    "on-tertiary-fixed-variant": "#7b2f00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "md": "24px",
+                    "xl": "64px",
+                    "base": "4px",
+                    "container-max": "1200px",
+                    "lg": "40px",
+                    "sm": "12px",
+                    "sidebar-width": "260px",
+                    "xs": "8px"
+            },
+            "fontFamily": {
+                    "display-xl": ["Inter"],
+                    "study-body": ["Newsreader"],
+                    "ui-small": ["Inter"],
+                    "h1": ["Inter"],
+                    "ui-medium": ["Inter"],
+                    "study-quote": ["Newsreader"],
+                    "h2": ["Inter"],
+                    "caption": ["Inter"]
+            },
+            "fontSize": {
+                    "display-xl": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "study-body": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "ui-small": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "ui-medium": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "study-quote": ["20px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                    "caption": ["12px", {"lineHeight": "16px", "fontWeight": "400"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-sans antialiased min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col bg-[#171717] text-indigo-500 font-sans text-sm font-medium docked left-0 h-screen w-64 fixed border-r border-[#262626] py-6 px-4 space-y-2 z-40">
+<div class="mb-8 px-2 flex items-center space-x-3">
+<img alt="User Profile" class="w-10 h-10 rounded-full bg-surface-variant object-cover" data-alt="A small, professional portrait photo of a diverse young professional, subtle lighting, clean dark background, conveying focus and academia, 1:1 aspect ratio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIbJv7izvuDerFsIoJkuLBocC7u7yAw8R28q-Ag5jzDVinGfUvU-tZ9BjC-jMiB-h2Z7ryKakcjkft-BcQYI06f750lb22YDbelN-tOaduw7Yl9OP-SbvX14DOFU9o8XBT2CrAsIwvT02WqK8g7gigCtmI4liLw_LO5_OPDBuZnsaAVux5mpZDxQHVOZCkBFko4zh-3NiaVKMWjQvD1SeHI-3FeeLuV2YtpulIn32N5hFUSsC1QPvWMGBmOCFWeHzKXoBdXy1F2ew"/>
+<div>
+<h2 class="text-lg font-black text-neutral-100 tracking-tighter">StudentsClub</h2>
+<p class="font-caption text-caption text-neutral-500">Academic Pro</p>
+</div>
+</div>
+<button class="w-full mb-6 bg-primary-container text-white py-2 px-4 rounded-lg font-ui-medium text-ui-medium hover:opacity-90 transition-opacity flex items-center justify-center space-x-2">
+<span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+<span>New Study Session</span>
+</button>
+<div class="flex-1 space-y-1">
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">menu_book</span>
+<span>Subjects</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">cloud_upload</span>
+<span>Upload</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md bg-neutral-800 text-indigo-400 border-r-2 border-indigo-500 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">description</span>
+<span>Drafts</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">quiz</span>
+<span>Quiz</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+<span>History</span>
+</a>
+</div>
+<div class="mt-auto space-y-1 pt-4 border-t border-[#262626]">
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center space-x-3 px-3 py-2.5 rounded-md text-neutral-500 hover:bg-neutral-800/50 hover:text-neutral-200 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-size: 20px;">help</span>
+<span>Support</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col md:ml-64 h-screen overflow-hidden">
+<!-- TopNavBar (Mobile mainly, or contextual top bar) -->
+<header class="bg-neutral-950/80 backdrop-blur-md text-indigo-600 dark:text-indigo-400 font-sans antialiased tracking-tight docked full-width top-0 sticky z-50 border-b border-neutral-800 flex justify-between items-center w-full px-6 py-3">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-tighter text-neutral-100 md:hidden">StudentsClub</span>
+<span class="font-ui-medium text-ui-medium text-neutral-400 hidden md:inline-flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 16px;">description</span>
+                    Reviewing: Macroeconomics Midterm Draft
+                </span>
+</div>
+<div class="flex items-center space-x-6">
+<nav class="hidden md:flex items-center space-x-6">
+<a class="font-ui-small text-ui-small text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Explore</a>
+<a class="font-ui-small text-ui-small text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Pricing</a>
+<a class="font-ui-small text-ui-small text-neutral-400 hover:text-neutral-100 transition-colors duration-200" href="#">Library</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-neutral-400 hover:text-neutral-100 transition-colors duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Three-Column Layout Canvas -->
+<div class="flex-1 flex overflow-hidden bg-background">
+<!-- Left Column: Question List (25%) -->
+<aside class="w-1/4 min-w-[250px] border-r border-surface-container-high bg-surface-container-low overflow-y-auto flex flex-col">
+<div class="p-4 border-b border-surface-container-high bg-surface-container sticky top-0 z-10 flex justify-between items-center">
+<h3 class="font-ui-medium text-ui-medium text-on-surface">Question Set</h3>
+<span class="bg-surface-variant text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-medium tracking-wider">24 ITEMS</span>
+</div>
+<ul class="flex-1 p-2 space-y-1">
+<!-- Item 1 (Active) -->
+<li>
+<button class="w-full text-left flex items-center gap-3 p-3 rounded-lg bg-surface-container-highest border border-outline-variant shadow-sm transition-colors relative">
+<span class="w-6 h-6 rounded-full bg-primary-container/20 text-primary-container flex items-center justify-center font-ui-small text-ui-small font-bold">1</span>
+<div class="flex-1 min-w-0">
+<p class="font-ui-small text-ui-small text-on-surface truncate">Supply &amp; Demand Curve Shift</p>
+</div>
+<span class="material-symbols-outlined text-primary-container" style="font-size: 16px;">edit_note</span>
+</button>
+</li>
+<!-- Item 2 -->
+<li>
+<button class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container transition-colors relative group">
+<span class="w-6 h-6 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-ui-small text-ui-small">2</span>
+<div class="flex-1 min-w-0">
+<p class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface truncate transition-colors">Elasticity of Goods</p>
+</div>
+<div class="w-2 h-2 rounded-full bg-secondary-fixed opacity-50"></div>
+</button>
+</li>
+<!-- Item 3 (Flagged) -->
+<li>
+<button class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container transition-colors relative group">
+<span class="w-6 h-6 rounded-full bg-error-container/20 text-error flex items-center justify-center font-ui-small text-ui-small">3</span>
+<div class="flex-1 min-w-0">
+<p class="font-ui-small text-ui-small text-error group-hover:text-error truncate transition-colors">Keynesian Multiplier</p>
+</div>
+<span class="material-symbols-outlined text-error" style="font-size: 16px;">flag</span>
+</button>
+</li>
+<!-- Item 4 -->
+<li>
+<button class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container transition-colors relative group">
+<span class="w-6 h-6 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-ui-small text-ui-small">4</span>
+<div class="flex-1 min-w-0">
+<p class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface truncate transition-colors">GDP Calculation</p>
+</div>
+</button>
+</li>
+<!-- Item 5 -->
+<li>
+<button class="w-full text-left flex items-center gap-3 p-3 rounded-lg hover:bg-surface-container transition-colors relative group">
+<span class="w-6 h-6 rounded-full bg-surface-variant text-on-surface-variant flex items-center justify-center font-ui-small text-ui-small">5</span>
+<div class="flex-1 min-w-0">
+<p class="font-ui-small text-ui-small text-on-surface-variant group-hover:text-on-surface truncate transition-colors">Inflation vs Deflation</p>
+</div>
+</button>
+</li>
+</ul>
+</aside>
+<!-- Center Column: Editor (50%) -->
+<section class="w-2/4 min-w-[500px] flex flex-col bg-surface overflow-y-auto">
+<div class="p-6 md:p-10 max-w-[800px] mx-auto w-full flex-1 space-y-8">
+<!-- Editor Header -->
+<div class="flex justify-between items-start">
+<div class="space-y-2 flex-1">
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-primary-container/10 text-primary-container font-ui-small text-[10px] uppercase tracking-widest font-semibold">Multiple Choice</span>
+<span class="px-2 py-1 rounded bg-surface-variant text-on-surface-variant font-ui-small text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 12px;">psychology</span> AI Draft
+                                </span>
+</div>
+<input class="w-full bg-transparent border-b border-transparent hover:border-surface-variant focus:border-primary-container text-h2 font-h2 text-on-surface outline-none transition-colors pb-1 px-0" type="text" value="Supply &amp; Demand Curve Shift"/>
+</div>
+</div>
+<!-- Question Body -->
+<div class="space-y-4">
+<label class="block font-ui-small text-ui-small text-outline-variant uppercase tracking-wider">Question Stem</label>
+<div class="bg-[#171717] border border-[#262626] rounded-xl p-6 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container/20 transition-all">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-quote font-study-quote text-on-surface resize-none outline-none min-h-[120px]" placeholder="Enter question text...">If the government imposes a price ceiling on gasoline that is below the equilibrium price, which of the following is the most likely immediate outcome in the market?</textarea>
+</div>
+</div>
+<!-- Choices -->
+<div class="space-y-4">
+<label class="block font-ui-small text-ui-small text-outline-variant uppercase tracking-wider">Answer Choices</label>
+<div class="space-y-3">
+<!-- Choice A (Correct) -->
+<div class="flex items-start gap-4 p-4 rounded-lg border border-secondary-container/30 bg-secondary-container/5 relative group">
+<div class="pt-1">
+<input checked="" class="w-5 h-5 text-secondary-container bg-surface-variant border-outline-variant focus:ring-secondary-container focus:ring-offset-surface" name="correct_answer" type="radio"/>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-body font-study-body text-on-surface resize-none outline-none" rows="2">A shortage will occur as the quantity demanded exceeds the quantity supplied.</textarea>
+</div>
+<div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined" style="font-size: 20px;">delete</span></button>
+</div>
+</div>
+<!-- Choice B -->
+<div class="flex items-start gap-4 p-4 rounded-lg border border-[#262626] bg-[#171717] hover:border-surface-variant transition-colors relative group">
+<div class="pt-1">
+<input class="w-5 h-5 text-primary-container bg-surface-variant border-outline-variant focus:ring-primary-container focus:ring-offset-surface" name="correct_answer" type="radio"/>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-body font-study-body text-on-surface resize-none outline-none" rows="2">A surplus will occur as suppliers increase production to meet demand.</textarea>
+</div>
+<div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined" style="font-size: 20px;">delete</span></button>
+</div>
+</div>
+<!-- Choice C -->
+<div class="flex items-start gap-4 p-4 rounded-lg border border-[#262626] bg-[#171717] hover:border-surface-variant transition-colors relative group">
+<div class="pt-1">
+<input class="w-5 h-5 text-primary-container bg-surface-variant border-outline-variant focus:ring-primary-container focus:ring-offset-surface" name="correct_answer" type="radio"/>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-body font-study-body text-on-surface resize-none outline-none" rows="2">The demand curve will shift outward to establish a new equilibrium.</textarea>
+</div>
+<div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined" style="font-size: 20px;">delete</span></button>
+</div>
+</div>
+<!-- Choice D -->
+<div class="flex items-start gap-4 p-4 rounded-lg border border-[#262626] bg-[#171717] hover:border-surface-variant transition-colors relative group">
+<div class="pt-1">
+<input class="w-5 h-5 text-primary-container bg-surface-variant border-outline-variant focus:ring-primary-container focus:ring-offset-surface" name="correct_answer" type="radio"/>
+</div>
+<div class="flex-1">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-body font-study-body text-on-surface resize-none outline-none" rows="2">Both quantity supplied and demanded will remain unchanged.</textarea>
+</div>
+<div class="absolute right-4 top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="text-outline hover:text-error transition-colors"><span class="material-symbols-outlined" style="font-size: 20px;">delete</span></button>
+</div>
+</div>
+</div>
+</div>
+<!-- Explanation -->
+<div class="space-y-4">
+<label class="block font-ui-small text-ui-small text-outline-variant uppercase tracking-wider flex items-center justify-between">
+<span>Explanation</span>
+<span class="text-primary flex items-center gap-1 cursor-pointer hover:text-primary-fixed"><span class="material-symbols-outlined" style="font-size: 14px;">auto_awesome</span> Improve with AI</span>
+</label>
+<div class="bg-surface-container border border-surface-variant rounded-xl p-4 focus-within:border-primary-container focus-within:ring-1 focus-within:ring-primary-container/20 transition-all">
+<textarea class="w-full bg-transparent border-none p-0 focus:ring-0 text-study-body font-study-body text-on-surface-variant resize-none outline-none min-h-[100px]">A price ceiling set below the equilibrium price creates a situation where the quantity demanded by consumers at that price exceeds the quantity suppliers are willing to produce, leading to a shortage.</textarea>
+</div>
+</div>
+<!-- Editor Actions -->
+<div class="flex justify-end gap-4 pt-4 border-t border-surface-container-high">
+<button class="px-4 py-2 rounded-lg border border-surface-variant text-on-surface hover:bg-surface-variant hover:text-white transition-colors font-ui-medium text-ui-medium flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">refresh</span> Regenerate
+                        </button>
+<button class="px-6 py-2 rounded-lg bg-primary-container text-white hover:bg-primary-container/90 transition-colors font-ui-medium text-ui-medium flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-size: 18px;">check</span> Save Question
+                        </button>
+</div>
+</div>
+</section>
+<!-- Right Column: Source Context (25%) -->
+<aside class="w-1/4 min-w-[300px] border-l border-surface-container-high bg-[#0A0A0A] overflow-y-auto flex flex-col">
+<div class="p-4 border-b border-surface-container-high bg-[#0A0A0A] sticky top-0 z-10 flex justify-between items-center">
+<h3 class="font-ui-medium text-ui-medium text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-outline-variant" style="font-size: 18px;">menu_book</span> Source Context
+                    </h3>
+</div>
+<div class="p-4 space-y-6 flex-1">
+<div class="bg-surface-container-low rounded-lg p-4 border border-surface-variant">
+<h4 class="font-ui-small text-ui-small text-outline-variant uppercase tracking-wider mb-3">Extracted From</h4>
+<div class="flex items-start gap-3">
+<div class="p-2 bg-primary-container/10 rounded text-primary-container">
+<span class="material-symbols-outlined" style="font-size: 24px;">picture_as_pdf</span>
+</div>
+<div>
+<p class="font-ui-medium text-ui-medium text-on-surface">Econ_101_Chapter4_Market_Forces.pdf</p>
+<p class="font-caption text-caption text-outline-variant mt-1">Page 42, Paragraph 3</p>
+</div>
+</div>
+</div>
+<div class="space-y-3 relative">
+<h4 class="font-ui-small text-ui-small text-outline-variant uppercase tracking-wider">Source Snippet</h4>
+<!-- PDF Preview Simulation -->
+<div class="bg-white rounded-lg p-5 shadow-inner border border-surface-variant relative overflow-hidden group">
+<!-- Highlighting effect -->
+<div class="absolute inset-0 bg-yellow-200 mix-blend-multiply opacity-20 pointer-events-none hidden group-hover:block"></div>
+<p class="font-serif text-[11px] leading-relaxed text-black/80 text-justify">
+                                Market interventions often lead to unintended consequences. When a governing body mandates a <mark class="bg-yellow-200/50 text-black px-1 rounded">price ceiling</mark>—a legal maximum on the price at which a good can be sold—it disrupts the natural equilibrium. If this ceiling is binding (set below the equilibrium price), the immediate effect is that the quantity demanded by consumers will significantly rise, while suppliers, disincentivized by lower potential revenue, will decrease the quantity they supply. <mark class="bg-yellow-200/50 text-black px-1 rounded">This disparity invariably creates a shortage</mark> in the market, often leading to rationing mechanisms such as long lines or seller biases, rather than price determining allocation.
+                            </p>
+</div>
+</div>
+</div>
+</aside>
+</div>
+<!-- Bottom Action Bar -->
+<footer class="bg-surface-container border-t border-surface-container-high p-4 flex justify-between items-center z-20 shrink-0">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="font-ui-medium text-ui-medium flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed"></span> 18 Approved
+                </span>
+<span class="font-ui-medium text-ui-medium flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-error"></span> 2 Flagged
+                </span>
+<span class="font-ui-medium text-ui-medium flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-surface-variant"></span> 4 Pending
+                </span>
+</div>
+<div class="flex gap-4">
+<button class="px-6 py-2.5 rounded-lg border border-error/50 text-error hover:bg-error/10 transition-colors font-ui-medium text-ui-medium flex items-center gap-2">
+                    Reject Set
+                </button>
+<button class="px-8 py-2.5 rounded-lg bg-on-surface text-background hover:bg-on-surface-variant transition-colors font-ui-medium text-ui-medium flex items-center gap-2 shadow-lg">
+                    Publish Set (24) <span class="material-symbols-outlined" style="font-size: 18px;">publish</span>
+</button>
+</div>
+</footer>
+</main>
+</body></html>
