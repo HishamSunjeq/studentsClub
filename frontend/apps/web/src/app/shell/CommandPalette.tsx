@@ -72,6 +72,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useCommandPalette() {
   const [open, setOpen] = useState(false);
 

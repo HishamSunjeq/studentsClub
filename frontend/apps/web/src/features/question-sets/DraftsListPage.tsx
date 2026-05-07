@@ -1,82 +1,140 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
+import { ArrowRight, FileText, Sparkles } from "lucide-react";
 import { useQuestionSetsListMine } from "@/api/generated/endpoints/question-sets/question-sets";
+import type { QuestionSetStatus } from "@/api/generated/schemas";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/design/PageHeader";
+import { EmptyState } from "@/components/design";
+import { cn } from "@/lib/utils";
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  published: "Published",
-  rejected: "Rejected",
-};
+const STATUS_FILTERS: { value: QuestionSetStatus | "all"; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "draft", label: "Drafts" },
+  { value: "published", label: "Published" },
+  { value: "rejected", label: "Rejected" },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  draft: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  published: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  rejected: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+const STATUS_STYLES: Record<QuestionSetStatus, string> = {
+  draft: "bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20",
+  published:
+    "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20",
+  rejected: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 export default function DraftsListPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const [filter, setFilter] = useState<QuestionSetStatus | "all">("all");
+
+  const { data, isLoading } = useQuestionSetsListMine(
+    {
+      size: 50,
+      status: filter === "all" ? undefined : filter,
+    },
+    { query: { enabled: !!user } },
+  );
 
   if (!user) {
     navigate("/login");
     return null;
   }
 
-  const { data, isLoading, error } = useQuestionSetsListMine({ size: 50 });
+  const items = data?.items ?? [];
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-3xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">My Question Sets</h1>
-            <p className="text-sm text-muted-foreground">
-              Review AI-generated drafts before publishing.
-            </p>
-          </div>
-          <Button variant="ghost" onClick={() => navigate("/")}>← Home</Button>
-        </div>
+    <div className="mx-auto max-w-4xl space-y-8">
+      <PageHeader
+        eyebrow="Question Sets"
+        title="My drafts"
+        description="Review AI-generated questions before publishing them to your subject's question bank."
+      >
+        <Button onClick={() => navigate("/upload")}>
+          <Sparkles className="size-3.5" strokeWidth={1.5} />
+          New upload
+        </Button>
+      </PageHeader>
 
-        {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {error && <p className="text-sm text-destructive">Failed to load.</p>}
-        {data?.items.length === 0 && (
-          <Card>
-            <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              No question sets yet. Upload a study material to get started.
-            </CardContent>
-          </Card>
-        )}
+      {/* Filter chips */}
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setFilter(f.value)}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-xs font-medium transition-colors",
+              filter === f.value
+                ? "bg-primary text-primary-foreground"
+                : "border border-border bg-muted text-muted-foreground hover:bg-muted/80",
+            )}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
+      {/* List */}
+      {isLoading ? (
         <div className="space-y-3">
-          {data?.items.map((qs) => (
-            <Card
-              key={qs.id}
-              className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => navigate(`/drafts/${qs.id}`)}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="truncate">{qs.title}</CardTitle>
-                    <CardDescription className="text-xs mt-1">
-                      {qs.ai_model} · {qs.tokens_used.toLocaleString()} tokens ·{" "}
-                      {new Date(qs.created_at).toLocaleString()}
-                    </CardDescription>
-                  </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded ${STATUS_STYLES[qs.status]}`}
-                  >
-                    {STATUS_LABELS[qs.status]}
-                  </span>
-                </div>
-              </CardHeader>
-            </Card>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-[14px]" />
           ))}
         </div>
-      </div>
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={FileText}
+          title="No question sets yet"
+          description="Upload study material to generate your first AI-drafted question set."
+          action={
+            <Button onClick={() => navigate("/upload")}>
+              <Sparkles className="size-3.5" strokeWidth={1.5} />
+              Upload material
+            </Button>
+          }
+        />
+      ) : (
+        <div className="space-y-3">
+          {items.map((qs) => (
+            <button
+              key={qs.id}
+              onClick={() => navigate(`/drafts/${qs.id}`)}
+              className="group flex w-full items-start justify-between gap-4 rounded-[14px] border border-border bg-card p-5 text-left transition-colors hover:border-ring/40"
+            >
+              <div className="flex min-w-0 flex-1 items-start gap-3">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted">
+                  <FileText
+                    className="size-4 text-muted-foreground"
+                    strokeWidth={1.5}
+                  />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground group-hover:text-primary">
+                    {qs.title}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {qs.ai_model} · {qs.tokens_used.toLocaleString()} tokens ·{" "}
+                    {new Date(qs.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-3">
+                <span
+                  className={cn(
+                    "rounded-full border px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider",
+                    STATUS_STYLES[qs.status],
+                  )}
+                >
+                  {qs.status}
+                </span>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-foreground" />
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

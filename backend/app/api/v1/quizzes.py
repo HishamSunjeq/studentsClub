@@ -3,11 +3,13 @@ from uuid import UUID
 from fastapi import APIRouter, Query, status
 
 from app.api.deps import CurrentUser, DBSession
+from app.models.quiz import QuizSessionStatus
 from app.schemas.quizzes import (
     QuizAnswerRequest,
     QuizAnswerResponse,
     QuizChoiceResponse,
     QuizQuestionResponse,
+    QuizResultResponse,
     QuizSessionListResponse,
     QuizSessionResponse,
     QuizSessionWithQuestionsResponse,
@@ -25,7 +27,11 @@ async def start_quiz(
     db: DBSession,
 ) -> QuizSessionWithQuestionsResponse:
     session, questions, choices_by_q = await quizzes_service.start_quiz(
-        db=db, user=current_user, subject_id=payload.subject_id, count=payload.count
+        db=db,
+        user=current_user,
+        subject_id=payload.subject_id,
+        count=payload.count,
+        difficulties=payload.difficulties,
     )
     return QuizSessionWithQuestionsResponse(
         id=session.id,
@@ -58,9 +64,16 @@ async def list_my_quizzes(
     db: DBSession,
     page: int = Query(default=1, ge=1),
     size: int = Query(default=20, ge=1, le=100),
+    status: QuizSessionStatus | None = Query(default=None),
+    subject_id: UUID | None = Query(default=None),
 ) -> QuizSessionListResponse:
     result = await quizzes_service.list_my_sessions(
-        db=db, user=current_user, page=page, size=size
+        db=db,
+        user=current_user,
+        page=page,
+        size=size,
+        status=status,
+        subject_id=subject_id,
     )
     return QuizSessionListResponse(
         items=[QuizSessionResponse.model_validate(s) for s in result.items],
@@ -137,6 +150,20 @@ async def submit_answer(
         answered_count=answered,
         score=score,
     )
+
+
+@router.get(
+    "/{session_id}/result",
+    response_model=QuizResultResponse,
+    operation_id="quizzes_get_result",
+)
+async def get_quiz_result(
+    session_id: UUID, current_user: CurrentUser, db: DBSession
+) -> QuizResultResponse:
+    payload = await quizzes_service.get_quiz_result(
+        db=db, session_id=session_id, user=current_user
+    )
+    return QuizResultResponse(**payload)
 
 
 @router.post("/{session_id}/complete", response_model=QuizSessionResponse, operation_id="quizzes_complete")

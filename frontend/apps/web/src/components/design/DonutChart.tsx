@@ -42,21 +42,31 @@ export function DonutChart({
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  let cumulative = 0;
-  const slices = segments.map((segment, idx) => {
+  const slices = segments.reduce<
+    Array<{
+      label: string;
+      value: number;
+      color: string;
+      dashLength: number;
+      offset: number;
+      key: string;
+    }>
+  >((acc, segment, idx) => {
     const value = Math.max(0, segment.value);
-    const fraction = value / total;
-    const dashLength = fraction * circumference;
-    const offset = -cumulative;
-    cumulative += dashLength;
-    return {
-      ...segment,
-      color: segment.color ?? DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
-      dashLength,
-      offset,
-      key: `${segment.label}-${idx}`,
-    };
-  });
+    const dashLength = (value / total) * circumference;
+    const cumulative = acc.reduce((sum, s) => sum + s.dashLength, 0);
+    return [
+      ...acc,
+      {
+        label: segment.label,
+        value: segment.value,
+        color: segment.color ?? DEFAULT_PALETTE[idx % DEFAULT_PALETTE.length],
+        dashLength,
+        offset: -cumulative,
+        key: `${segment.label}-${idx}`,
+      },
+    ];
+  }, []);
 
   return (
     <div

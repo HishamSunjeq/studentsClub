@@ -22,20 +22,22 @@ async def start_quiz(
     user: User,
     subject_id: uuid.UUID,
     count: int,
+    difficulties: list[str] | None = None,
 ) -> tuple[QuizSession, list[Question], dict[uuid.UUID, list[QuestionChoice]]]:
     # Pick `count` random active questions from published sets in this subject.
-    questions = list(
-        await db.scalars(
-            select(Question)
-            .join(QuestionSet, Question.question_set_id == QuestionSet.id)
-            .where(
-                QuestionSet.subject_id == subject_id,
-                QuestionSet.status == QuestionSetStatus.published,
-                Question.is_active.is_(True),
-            )
-            .order_by(func.random())
-            .limit(count)
+    query = (
+        select(Question)
+        .join(QuestionSet, Question.question_set_id == QuestionSet.id)
+        .where(
+            QuestionSet.subject_id == subject_id,
+            QuestionSet.status == QuestionSetStatus.published,
+            Question.is_active.is_(True),
         )
+    )
+    if difficulties:
+        query = query.where(Question.difficulty.in_(difficulties))
+    questions = list(
+        await db.scalars(query.order_by(func.random()).limit(count))
     )
     if not questions:
         raise ValidationError("No published questions available for this subject")
@@ -207,8 +209,14 @@ async def list_my_sessions(
     user: User,
     page: int = 1,
     size: int = 20,
+    status: QuizSessionStatus | None = None,
+    subject_id: uuid.UUID | None = None,
 ) -> Page[QuizSession]:
     query = select(QuizSession).where(QuizSession.user_id == user.id)
+    if status is not None:
+        query = query.where(QuizSession.status == status)
+    if subject_id is not None:
+        query = query.where(QuizSession.subject_id == subject_id)
     total = await db.scalar(select(func.count()).select_from(query.subquery())) or 0
     items = list(
         await db.scalars(
@@ -218,3 +226,129 @@ async def list_my_sessions(
         )
     )
     return Page.from_list(items, total=total, page=page, size=size)
+
+
+async def get_quiz_result(
+    *, db: AsyncSession, session_id: uuid.UUID, user: User
+) -> dict:
+    """Build the full result payload: per-question breakdown, difficulty stats, trend."""
+    session = await get_session(db=db, session_id=session_id, user=user)
+
+    picks = list(
+        await db.scalars(
+            select(QuizSessionQuestion)
+            .where(QuizSessionQuestion.session_id == session.id)
+            .order_by(QuizSessionQuestion.position)
+        )
+    )
+    q_ids = [p.question_id for p in picks]
+
+    questions_by_id = {
+        q.id: q
+        for q in await db.scalars(select(Question).where(Question.id.in_(q_ids)))
+    } if q_ids else {}
+
+    all_choices = list(
+        await db.scalars(
+            select(QuestionChoice)
+            .where(QuestionChoice.question_id.in_(q_ids))
+            .order_by(QuestionChoice.position)
+        )
+    ) if q_ids else []
+    choices_by_q: dict[uuid.UUID, list[QuestionChoice]] = {}
+    for c in all_choices:
+        choices_by_q.setdefault(c.question_id, []).append(c)
+
+    attempts_by_q = {
+        a.question_id: a
+        for a in await db.scalars(
+            select(QuizAttempt).where(QuizAttempt.session_id == session.id)
+        )
+    }
+
+    correct_count = 0
+    incorrect_count = 0
+    skipped_count = 0
+    by_diff: dict[str, dict[str, int]] = {}
+    questions_payload: list[dict] = []
+
+    for q_id in q_ids:
+        question = questions_by_id.get(q_id)
+        if question is None:
+            continue
+        choices = choices_by_q.get(q_id, [])
+        correct_choice = next((c for c in choices if c.is_correct), None)
+        if correct_choice is None:
+            continue
+        attempt = attempts_by_q.get(q_id)
+        is_correct = bool(attempt and attempt.is_correct)
+        selected = attempt.selected_choice_id if attempt else None
+
+        if attempt is None:
+            skipped_count += 1
+        elif is_correct:
+            correct_count += 1
+        else:
+            incorrect_count += 1
+
+        diff = question.difficulty.value if hasattr(question.difficulty, "value") else question.difficulty
+        bucket = by_diff.setdefault(str(diff), {"correct": 0, "total": 0})
+        bucket["total"] += 1
+        if is_correct:
+            bucket["correct"] += 1
+
+        questions_payload.append(
+            {
+                "question_id": question.id,
+                "text": question.text,
+                "difficulty": question.difficulty,
+                "explanation": question.explanation,
+                "selected_choice_id": selected,
+                "correct_choice_id": correct_choice.id,
+                "is_correct": is_correct,
+                "choices": [
+                    {"id": c.id, "text": c.text, "position": c.position}
+                    for c in choices
+                ],
+            }
+        )
+
+    total = session.total_questions or len(q_ids) or 0
+    accuracy = (correct_count / total) if total else 0.0
+
+    # Trend: accuracy delta vs the most recent COMPLETED prior quiz in the same subject.
+    prior = await db.scalar(
+        select(QuizSession)
+        .where(
+            QuizSession.user_id == user.id,
+            QuizSession.subject_id == session.subject_id,
+            QuizSession.status == QuizSessionStatus.completed,
+            QuizSession.id != session.id,
+            QuizSession.created_at < session.created_at,
+        )
+        .order_by(QuizSession.created_at.desc())
+        .limit(1)
+    )
+    trend: float | None = None
+    if prior is not None and prior.total_questions:
+        prior_acc = prior.score / prior.total_questions
+        trend = round(accuracy - prior_acc, 4)
+
+    return {
+        "session_id": session.id,
+        "subject_id": session.subject_id,
+        "status": session.status,
+        "score": session.score,
+        "total": total,
+        "accuracy": round(accuracy, 4),
+        "correct_count": correct_count,
+        "incorrect_count": incorrect_count,
+        "skipped_count": skipped_count,
+        "completed_at": session.completed_at,
+        "breakdown_by_difficulty": [
+            {"difficulty": k, "correct": v["correct"], "total": v["total"]}
+            for k, v in by_diff.items()
+        ],
+        "trend": trend,
+        "questions": questions_payload,
+    }

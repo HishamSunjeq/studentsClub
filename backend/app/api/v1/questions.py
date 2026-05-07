@@ -52,3 +52,36 @@ async def deactivate_question(
     await question_sets_service.deactivate_question(
         db=db, question_id=question_id, user=current_user
     )
+
+
+@router.post(
+    "/{question_id}/regenerate",
+    response_model=QuestionResponse,
+    operation_id="questions_regenerate",
+)
+async def regenerate_question(
+    question_id: UUID,
+    current_user: CurrentUser,
+    db: DBSession,
+) -> QuestionResponse:
+    question = await question_sets_service.regenerate_question(
+        db=db, question_id=question_id, user=current_user
+    )
+    choices = list(
+        await db.scalars(
+            select(QuestionChoice)
+            .where(QuestionChoice.question_id == question.id)
+            .order_by(QuestionChoice.position)
+        )
+    )
+    return QuestionResponse(
+        id=question.id,
+        question_set_id=question.question_set_id,
+        text=question.text,
+        explanation=question.explanation,
+        difficulty=question.difficulty,
+        source_excerpt=question.source_excerpt,
+        is_active=question.is_active,
+        position=question.position,
+        choices=[QuestionChoiceResponse.model_validate(c) for c in choices],
+    )

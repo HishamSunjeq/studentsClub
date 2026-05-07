@@ -175,6 +175,61 @@ async def update_question(
     return question
 
 
+async def regenerate_question(
+    *, db: AsyncSession, question_id: uuid.UUID, user: User
+) -> Question:
+    """Regenerate a single question in-place via the AI provider, reusing the
+    original source_excerpt as the input chunk so the new question stays anchored
+    to the same study material."""
+    from app.ai.factory import get_provider
+
+    question = await db.get(Question, question_id)
+    if question is None:
+        raise NotFoundError("Question")
+    qs = await _get_qs_or_404(db, question.question_set_id)
+    if qs.created_by != user.id:
+        raise ForbiddenError("Not your question")
+    if qs.status != QuestionSetStatus.draft:
+        raise ConflictError(f"Cannot edit a {qs.status.value} question set")
+
+    seed = question.source_excerpt or question.text
+    if not seed:
+        raise ConflictError("Question has no source to regenerate from")
+
+    provider = get_provider()
+    result = await provider.extract_questions(
+        [seed], source_type="study_material", target_count=1
+    )
+    if not result.questions:
+        raise ConflictError("AI returned no candidate question")
+
+    draft = result.questions[0]
+    question.text = draft.text
+    question.explanation = draft.explanation
+    question.difficulty = draft.difficulty
+
+    # Replace all choices with the new draft's choices
+    existing = list(
+        await db.scalars(
+            select(QuestionChoice).where(QuestionChoice.question_id == question.id)
+        )
+    )
+    for c in existing:
+        await db.delete(c)
+    await db.flush()
+    for pos, c in enumerate(draft.choices):
+        db.add(
+            QuestionChoice(
+                question_id=question.id,
+                text=c.text,
+                is_correct=c.is_correct,
+                position=pos,
+            )
+        )
+    await db.flush()
+    return question
+
+
 async def deactivate_question(
     *, db: AsyncSession, question_id: uuid.UUID, user: User
 ) -> None:

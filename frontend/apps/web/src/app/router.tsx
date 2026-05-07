@@ -3,11 +3,13 @@ import { Navigate, Route, Routes } from "react-router";
 import { AppShell } from "./shell/AppShell";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuthStore } from "@/features/auth/auth.store";
 
 // Public pages
 const LandingPage = lazy(() => import("@/features/landing/LandingPage"));
 const LoginPage = lazy(() => import("@/features/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/features/auth/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("@/features/auth/ForgotPasswordPage"));
 
 // Protected pages
 const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage"));
@@ -19,6 +21,9 @@ const DraftsListPage = lazy(
 const ReviewPage = lazy(() => import("@/features/question-sets/ReviewPage"));
 const QuizStartPage = lazy(() => import("@/features/quizzes/QuizStartPage"));
 const QuizPlayerPage = lazy(() => import("@/features/quizzes/QuizPlayerPage"));
+const SubjectDetailPage = lazy(
+  () => import("@/features/subjects/SubjectDetailPage"),
+);
 
 // Dev only
 const ComponentsShowcasePage = lazy(
@@ -40,10 +45,11 @@ export function AppRouter() {
   return (
     <Suspense fallback={<PageFallback />}>
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Root — landing for visitors, dashboard for authed users */}
+        <Route path="/" element={<RootRoute />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* Protected — all wrapped in AppShell */}
         <Route
@@ -55,6 +61,7 @@ export function AppRouter() {
         >
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/subjects" element={<SubjectsPage />} />
+          <Route path="/subjects/:id" element={<SubjectDetailPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/drafts" element={<DraftsListPage />} />
           <Route path="/drafts/:id" element={<ReviewPage />} />
@@ -86,6 +93,12 @@ export function AppRouter() {
       </Routes>
     </Suspense>
   );
+}
+
+function RootRoute() {
+  const accessToken = useAuthStore((s) => s.accessToken);
+  if (accessToken) return <Navigate to="/dashboard" replace />;
+  return <LandingPage />;
 }
 
 function PlaceholderPage({ title }: { title: string }) {
