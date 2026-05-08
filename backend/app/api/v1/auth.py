@@ -3,10 +3,12 @@ from fastapi import APIRouter
 from app.api.deps import CurrentUser, DBSession
 from app.schemas.auth import (
     ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenResponse,
 )
 from app.schemas.users import UserResponse
@@ -53,4 +55,16 @@ async def change_password(
         user=current_user,
         current_password=body.current_password,
         new_password=body.new_password,
+    )
+
+
+@router.post("/forgot-password", status_code=204, operation_id="auth_forgot_password")
+async def forgot_password(body: ForgotPasswordRequest, db: DBSession) -> None:
+    await auth_service.forgot_password(db=db, email=body.email)
+
+
+@router.post("/reset-password", status_code=204, operation_id="auth_reset_password")
+async def reset_password(body: ResetPasswordRequest, db: DBSession) -> None:
+    await auth_service.reset_password(
+        db=db, raw_token=body.token, new_password=body.new_password
     )

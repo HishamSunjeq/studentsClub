@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ import {
   useSettingsGet,
   useSettingsUpdate,
 } from "@/api/generated/endpoints/settings/settings";
+import { useAuthChangePassword } from "@/api/generated/endpoints/auth/auth";
 import type {
   DensityPreference,
   ThemePreference,
@@ -138,9 +139,7 @@ export default function SettingsPage() {
 
       {/* Password */}
       <SettingsSection icon={Lock} title="Password" description="Change your sign-in password">
-        <Button variant="outline" disabled>
-          Change password (coming soon)
-        </Button>
+        <ChangePasswordForm />
       </SettingsSection>
 
       {/* Appearance */}
@@ -411,6 +410,114 @@ function NotificationPrefsForm({
         );
       })}
     </ul>
+  );
+}
+
+function ChangePasswordForm() {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const currentRef = useRef<HTMLInputElement>(null);
+
+  const mutation = useAuthChangePassword({
+    mutation: {
+      onSuccess: () => {
+        toast.success("Password changed");
+        setOpen(false);
+        setCurrent("");
+        setNext("");
+        setConfirm("");
+      },
+      onError: (err: unknown) => {
+        const detail =
+          (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+        toast.error(detail ?? "Failed to change password");
+      },
+    },
+  });
+
+  useEffect(() => {
+    if (open) setTimeout(() => currentRef.current?.focus(), 50);
+  }, [open]);
+
+  if (!open) {
+    return (
+      <Button variant="outline" onClick={() => setOpen(true)}>
+        Change password
+      </Button>
+    );
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (next.length < 8) {
+      toast.error("New password must be at least 8 characters");
+      return;
+    }
+    if (next !== confirm) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    mutation.mutate({ data: { current_password: current, new_password: next } });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="max-w-sm space-y-4">
+      <div className="space-y-1">
+        <Label htmlFor="current-pw">Current password</Label>
+        <Input
+          id="current-pw"
+          ref={currentRef}
+          type="password"
+          value={current}
+          onChange={(e) => setCurrent(e.target.value)}
+          autoComplete="current-password"
+          required
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="new-pw">New password</Label>
+        <Input
+          id="new-pw"
+          type="password"
+          value={next}
+          onChange={(e) => setNext(e.target.value)}
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={128}
+          required
+        />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="confirm-pw">Confirm new password</Label>
+        <Input
+          id="confirm-pw"
+          type="password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          autoComplete="new-password"
+          required
+        />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving…" : "Save password"}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => {
+            setOpen(false);
+            setCurrent("");
+            setNext("");
+            setConfirm("");
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
+    </form>
   );
 }
 

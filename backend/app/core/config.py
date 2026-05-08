@@ -32,6 +32,15 @@ class Settings(BaseSettings):
     daily_upload_limit_per_user: int = 10
 
     cors_origins: list[str] = ["http://localhost:5173"]
+    frontend_url: str = "http://localhost:5173"
+    password_reset_token_ttl_minutes: int = 60  # 1 hour
+
+    # Optional SMTP — if not set, reset links are logged to console instead
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@studentsclub.local"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

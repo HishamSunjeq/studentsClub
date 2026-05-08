@@ -7,6 +7,7 @@ import { BookMarked, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuthForgotPassword } from "@/api/generated/endpoints/auth/auth";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -15,6 +16,7 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
+  const forgotPasswordMutation = useAuthForgotPassword();
 
   const {
     register,
@@ -22,9 +24,10 @@ export default function ForgotPasswordPage() {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
-  async function onSubmit() {
-    // Backend endpoint not yet implemented — simulate success
-    await new Promise((r) => setTimeout(r, 600));
+  async function onSubmit(values: FormValues) {
+    await forgotPasswordMutation.mutateAsync({
+      data: { email: values.email },
+    });
     setSent(true);
   }
 
@@ -88,8 +91,14 @@ export default function ForgotPasswordPage() {
                   )}
                 </div>
 
-                <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
-                  {isSubmitting ? "Sending…" : "Send reset link"}
+                <Button
+                  type="submit"
+                  className="mt-1 w-full"
+                  disabled={isSubmitting || forgotPasswordMutation.isPending}
+                >
+                  {isSubmitting || forgotPasswordMutation.isPending
+                    ? "Sending…"
+                    : "Send reset link"}
                 </Button>
               </form>
 

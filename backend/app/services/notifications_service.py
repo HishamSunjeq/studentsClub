@@ -31,6 +31,7 @@ async def get_or_create_settings(*, db: AsyncSession, user: User) -> UserSetting
         settings = UserSettings(user_id=user.id)
         db.add(settings)
         await db.flush()
+        await db.commit()
         await db.refresh(settings)
     return settings
 
@@ -57,6 +58,8 @@ async def update_settings(
     if notification_prefs is not None:
         settings.notification_prefs = notification_prefs
     await db.flush()
+    await db.commit()
+    await db.refresh(settings)
     return settings
 
 
