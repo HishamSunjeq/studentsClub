@@ -16,18 +16,32 @@ depends_on = None
 
 
 def upgrade() -> None:
-    theme_enum = sa.Enum("system", "light", "dark", name="theme_preference")
-    density_enum = sa.Enum("comfortable", "compact", name="density_preference")
-    notif_enum = sa.Enum(
+    # create_type=False so create_table below doesn't try to CREATE TYPE a second
+    # time after the explicit .create() call.
+    theme_enum = postgresql.ENUM(
+        "system", "light", "dark", name="theme_preference", create_type=False
+    )
+    density_enum = postgresql.ENUM(
+        "comfortable", "compact", name="density_preference", create_type=False
+    )
+    notif_enum = postgresql.ENUM(
         "draft_ready",
         "question_set_published",
         "question_set_voted",
         "new_material_in_subject",
         name="notification_type",
+        create_type=False,
     )
-    theme_enum.create(op.get_bind(), checkfirst=True)
-    density_enum.create(op.get_bind(), checkfirst=True)
-    notif_enum.create(op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    sa.Enum("system", "light", "dark", name="theme_preference").create(bind, checkfirst=True)
+    sa.Enum("comfortable", "compact", name="density_preference").create(bind, checkfirst=True)
+    sa.Enum(
+        "draft_ready",
+        "question_set_published",
+        "question_set_voted",
+        "new_material_in_subject",
+        name="notification_type",
+    ).create(bind, checkfirst=True)
 
     op.create_table(
         "user_settings",
