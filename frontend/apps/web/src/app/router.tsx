@@ -23,6 +23,8 @@ const QuizStartPage = lazy(() => import("@/features/quizzes/QuizStartPage"));
 const QuizPlayerPage = lazy(() => import("@/features/quizzes/QuizPlayerPage"));
 const QuizResultPage = lazy(() => import("@/features/quizzes/QuizResultPage"));
 const QuizHistoryPage = lazy(() => import("@/features/quizzes/QuizHistoryPage"));
+const ProfilePage = lazy(() => import("@/features/profile/ProfilePage"));
+const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const SubjectDetailPage = lazy(
   () => import("@/features/subjects/SubjectDetailPage"),
 );
@@ -71,12 +73,9 @@ export function AppRouter() {
           <Route path="/quiz/:id" element={<QuizPlayerPage />} />
           <Route path="/quiz/:id/result" element={<QuizResultPage />} />
           <Route path="/history" element={<QuizHistoryPage />} />
-          {/* Placeholder routes (pages built in later phases) */}
-          <Route path="/profile" element={<PlaceholderPage title="Profile" />} />
-          <Route
-            path="/settings"
-            element={<PlaceholderPage title="Settings" />}
-          />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/users/:id" element={<ProfilePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route
             path="/support"
             element={<PlaceholderPage title="Support" />}

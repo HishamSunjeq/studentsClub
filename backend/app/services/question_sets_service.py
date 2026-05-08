@@ -93,6 +93,9 @@ async def update_title(
 async def publish(
     *, db: AsyncSession, qs_id: uuid.UUID, user: User
 ) -> QuestionSet:
+    from app.models.subject import Subject
+    from app.services import notifications_service
+
     qs = await _get_qs_or_404(db, qs_id)
     if qs.created_by != user.id:
         raise ForbiddenError("Not your question set")
@@ -111,6 +114,21 @@ async def publish(
     qs.status = QuestionSetStatus.published
     await db.flush()
     await db.refresh(qs)
+
+    # Fan out notifications to enrolled subject members (other than the author).
+    if qs.subject_id is not None:
+        subject = await db.get(Subject, qs.subject_id)
+        if subject is not None:
+            await notifications_service.emit_question_set_published(
+                db=db,
+                question_set_id=qs.id,
+                subject_id=subject.id,
+                subject_name=subject.name,
+                title=qs.title,
+                author_id=user.id,
+                author_name=user.full_name,
+            )
+
     return qs
 
 

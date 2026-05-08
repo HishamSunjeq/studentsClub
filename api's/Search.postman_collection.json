@@ -1,0 +1,32 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-0010-4000-8000-000000000010",
+    "name": "Search",
+    "description": "Global ILIKE search across subjects and published question sets. Powers the ⌘K command palette.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Search",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/search?q=algebra&limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["search"],
+          "query": [
+            { "key": "q", "value": "algebra", "description": "Search query (matches subject name/code/college and published question-set title)" },
+            { "key": "limit", "value": "10", "description": "1–25, default 10. Applied per result type." }
+          ]
+        },
+        "description": "Simple ILIKE search across:\n- `Subject.name`, `Subject.code`, `Subject.college`\n- `QuestionSet.title` (published only)\n\n**Requires:** Bearer token\n\n**Query params:**\n- `q` — search string (empty `q` returns empty result lists)\n- `limit` — 1–25, default 10. Applied independently to each result type.\n\n**Returns:** `SearchResponse` (200):\n- `query` — echoed (trimmed)\n- `subjects[]` — `{ id, name, code, college, academic_year }`\n- `question_sets[]` — `{ question_set_id, title, subject_id, subject_name, subject_code }`"
+      },
+      "response": []
+    }
+  ]
+}

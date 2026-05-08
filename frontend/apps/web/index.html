@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,18 +7,37 @@
     <meta name="color-scheme" content="dark light" />
     <title>StudentsClub</title>
     <script>
-      // Theme bootstrap — dark is default; honor explicit user choice persisted in localStorage.
-      // Phase 10 will replace this with a full settings-driven theme switcher.
+      // No-flash bootstrap. next-themes handles the runtime, but the first paint
+      // must already have the right classes — otherwise users see a flash.
+      // Mirrors the THEME_STORAGE_KEY / ACCENT_STORAGE_KEY / DEFAULT_ACCENT
+      // constants from src/lib/themes.ts.
       (function () {
         try {
-          var saved = localStorage.getItem("sc-theme");
-          var prefersLight =
-            saved === "light" ||
-            (!saved && window.matchMedia("(prefers-color-scheme: light)").matches);
-          if (prefersLight) {
-            document.documentElement.classList.remove("dark");
-            document.documentElement.classList.add("light");
+          var d = document.documentElement;
+
+          // Color scheme: stored 'light'|'dark'|'system'|null → resolve to a class
+          var theme = localStorage.getItem("sc-theme");
+          var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var resolved =
+            theme === "light" || theme === "dark"
+              ? theme
+              : prefersDark
+              ? "dark"
+              : "light";
+          d.classList.remove("light", "dark");
+          d.classList.add(resolved);
+
+          // Accent: stored id or the indigo default
+          var validAccents = ["indigo", "emerald", "amber", "rose", "sky", "violet"];
+          var accent = localStorage.getItem("sc-accent");
+          if (validAccents.indexOf(accent) === -1) accent = "indigo";
+          for (var i = 0; i < d.classList.length; i++) {
+            if (d.classList[i].indexOf("accent-") === 0) {
+              d.classList.remove(d.classList[i]);
+              i--;
+            }
           }
+          d.classList.add("accent-" + accent);
         } catch (_) {}
       })();
     </script>

@@ -205,6 +205,150 @@
 }
 
 /* =========================================================================
+   ACCENT PRESETS
+   Each `.accent-<id>` overrides only the indigo-coloured variables, so they
+   layer cleanly on top of `:root` (light) or `.dark` (dark).
+   To add a new accent: append a block here + an entry in `src/lib/themes.ts`.
+   ========================================================================= */
+
+/* Indigo (default — kept explicit so users can switch back) */
+.accent-indigo {
+    --primary: #4f46e5;
+    --ring: #4f46e5;
+    --chart-1: #4f46e5;
+    --sidebar-primary: #4f46e5;
+    --sidebar-ring: #4f46e5;
+}
+.dark.accent-indigo,
+.dark .accent-indigo {
+    --primary: #4f46e5;
+    --ring: #c3c0ff;
+    --chart-1: #c3c0ff;
+    --sidebar-primary: #c3c0ff;
+    --sidebar-ring: #c3c0ff;
+}
+
+/* Emerald */
+.accent-emerald {
+    --primary: #10b981;
+    --primary-foreground: #ffffff;
+    --ring: #10b981;
+    --accent: #ecfdf5;
+    --accent-foreground: #047857;
+    --chart-1: #10b981;
+    --sidebar-primary: #10b981;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-ring: #10b981;
+}
+.dark.accent-emerald {
+    --primary: #10b981;
+    --primary-foreground: #064e3b;
+    --ring: #34d399;
+    --accent: #064e3b;
+    --accent-foreground: #d1fae5;
+    --chart-1: #34d399;
+    --sidebar-primary: #34d399;
+    --sidebar-primary-foreground: #064e3b;
+    --sidebar-ring: #34d399;
+}
+
+/* Amber */
+.accent-amber {
+    --primary: #f59e0b;
+    --primary-foreground: #ffffff;
+    --ring: #f59e0b;
+    --accent: #fffbeb;
+    --accent-foreground: #b45309;
+    --chart-1: #f59e0b;
+    --sidebar-primary: #f59e0b;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-ring: #f59e0b;
+}
+.dark.accent-amber {
+    --primary: #f59e0b;
+    --primary-foreground: #451a03;
+    --ring: #fbbf24;
+    --accent: #451a03;
+    --accent-foreground: #fde68a;
+    --chart-1: #fbbf24;
+    --sidebar-primary: #fbbf24;
+    --sidebar-primary-foreground: #451a03;
+    --sidebar-ring: #fbbf24;
+}
+
+/* Rose */
+.accent-rose {
+    --primary: #e11d48;
+    --primary-foreground: #ffffff;
+    --ring: #e11d48;
+    --accent: #fff1f2;
+    --accent-foreground: #be123c;
+    --chart-1: #e11d48;
+    --sidebar-primary: #e11d48;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-ring: #e11d48;
+}
+.dark.accent-rose {
+    --primary: #e11d48;
+    --primary-foreground: #fecdd3;
+    --ring: #fb7185;
+    --accent: #4c0519;
+    --accent-foreground: #fecdd3;
+    --chart-1: #fb7185;
+    --sidebar-primary: #fb7185;
+    --sidebar-primary-foreground: #4c0519;
+    --sidebar-ring: #fb7185;
+}
+
+/* Sky */
+.accent-sky {
+    --primary: #0ea5e9;
+    --primary-foreground: #ffffff;
+    --ring: #0ea5e9;
+    --accent: #f0f9ff;
+    --accent-foreground: #0369a1;
+    --chart-1: #0ea5e9;
+    --sidebar-primary: #0ea5e9;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-ring: #0ea5e9;
+}
+.dark.accent-sky {
+    --primary: #0ea5e9;
+    --primary-foreground: #082f49;
+    --ring: #38bdf8;
+    --accent: #082f49;
+    --accent-foreground: #bae6fd;
+    --chart-1: #38bdf8;
+    --sidebar-primary: #38bdf8;
+    --sidebar-primary-foreground: #082f49;
+    --sidebar-ring: #38bdf8;
+}
+
+/* Violet */
+.accent-violet {
+    --primary: #8b5cf6;
+    --primary-foreground: #ffffff;
+    --ring: #8b5cf6;
+    --accent: #f5f3ff;
+    --accent-foreground: #6d28d9;
+    --chart-1: #8b5cf6;
+    --sidebar-primary: #8b5cf6;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-ring: #8b5cf6;
+}
+.dark.accent-violet {
+    --primary: #8b5cf6;
+    --primary-foreground: #2e1065;
+    --ring: #a78bfa;
+    --accent: #2e1065;
+    --accent-foreground: #ddd6fe;
+    --chart-1: #a78bfa;
+    --sidebar-primary: #a78bfa;
+    --sidebar-primary-foreground: #2e1065;
+    --sidebar-ring: #a78bfa;
+}
+
+/* =========================================================================
    Base layer
    ========================================================================= */
 @layer base {

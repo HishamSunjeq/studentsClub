@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-0003-4000-8000-000000000003",
     "name": "Users",
-    "description": "User profile endpoints.",
+    "description": "User profile, dashboard stats, recommended subjects, and resume-quiz endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -21,6 +21,120 @@
           "path": ["users", "me"]
         },
         "description": "Return the profile of the authenticated user.\n\n**Requires:** Bearer token\n\n**Returns:** `UserResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Stats",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/me/stats",
+          "host": ["{{base_url}}"],
+          "path": ["users", "me", "stats"]
+        },
+        "description": "Aggregate stats surfaced on the dashboard hero + bento grid.\n\n**Requires:** Bearer token\n\n**Returns:** `UserStatsResponse` (200) with:\n- `streak_days` — consecutive days with ≥1 attempt (anchored to today or yesterday)\n- `xp_total` — `10·correct_answers + 5·published_questions`\n- `weekly_goal` (default 5), `weekly_progress`\n- `accuracy_avg` (0..1), `correct_count`, `total_attempts`\n- `drafts_pending_review_count`\n- `published_question_count`"
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Continue Session",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/me/continue",
+          "host": ["{{base_url}}"],
+          "path": ["users", "me", "continue"]
+        },
+        "description": "Most recent in-progress quiz session — drives the dashboard's \"Continue where you left off\" card.\n\n**Requires:** Bearer token\n\n**Returns:** `ContinueSessionResponse` (200) with `session_id`, `subject_id`, `subject_name`, `subject_code`, `total_questions`, `answered_questions`, `progress` (0..1), `started_at`. Returns `null` if no in-progress quiz exists."
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Recommended Subjects",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/me/recommended-subjects",
+          "host": ["{{base_url}}"],
+          "path": ["users", "me", "recommended-subjects"]
+        },
+        "description": "Up to 4 non-enrolled subjects matching the user's college or academic year. Powers the dashboard \"Recommended for you\" tile.\n\n**Requires:** Bearer token\n\n**Returns:** `list[RecommendedSubjectItem]` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get My Settings",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/me/settings",
+          "host": ["{{base_url}}"],
+          "path": ["users", "me", "settings"]
+        },
+        "description": "Get the authenticated user's UI + notification preferences. Lazily creates a default row on first access.\n\n**Requires:** Bearer token\n\n**Returns:** `UserSettingsResponse` (200) with:\n- `theme` — `system` | `light` | `dark`\n- `accent_color` — string (default `\"indigo\"`)\n- `density` — `comfortable` | `compact`\n- `language` — ISO code (default `\"en\"`)\n- `notification_prefs` — `{ [notification_type]: enabled_bool }`. Missing keys default to `true`."
+      },
+      "response": []
+    },
+    {
+      "name": "Update My Settings",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "PATCH",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"theme\": \"dark\",\n  \"density\": \"comfortable\",\n  \"language\": \"en\",\n  \"notification_prefs\": {\n    \"draft_ready\": true,\n    \"new_material_in_subject\": true,\n    \"question_set_voted\": false\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/users/me/settings",
+          "host": ["{{base_url}}"],
+          "path": ["users", "me", "settings"]
+        },
+        "description": "Partial-update of UI / notification preferences. Send only the fields you want to change.\n\n**Requires:** Bearer token\n\n**Body fields (all optional):**\n- `theme` — `system` | `light` | `dark`\n- `accent_color` — string, max 32 chars\n- `density` — `comfortable` | `compact`\n- `language` — string, max 8 chars\n- `notification_prefs` — full map of `{ [notification_type]: bool }`. Replaces the previous value entirely.\n\n**Returns:** `UserSettingsResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Profile",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/users/{{user_id}}/profile",
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "profile"]
+        },
+        "description": "Public-shaped profile of any user — stats, badges, recent contributions. Used by `/profile` and `/users/:id` pages.\n\n**Requires:** Bearer token (auth needed but the response is public-shaped).\n\n**Path params:**\n- `user_id` — UUID\n\n**Returns:** `UserProfileResponse` (200) with:\n- Identity: `id`, `full_name`, `college`, `academic_year`, `joined_at`\n- Quiz stats: `completed_quizzes`, `accuracy_avg` (0..1), `correct_count`, `total_attempts`, `streak_days`\n- Contributions: `published_question_set_count`, `published_question_count`, `enrolled_subject_count`\n- `badges[]` — earned milestone badges (`first_quiz`, `active_learner`, `streak_starter`, `week_warrior`, `first_contribution`, `top_contributor`, `perfect_score`)\n- `recent_published_sets[]` — top 5 most-recent published sets across all subjects."
       },
       "response": []
     }

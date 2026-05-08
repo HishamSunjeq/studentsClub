@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-0008-4000-8000-000000000008",
     "name": "Quizzes",
-    "description": "Quiz session endpoints — start, browse, answer questions, and complete a quiz.",
+    "description": "Quiz session endpoints — start, browse, answer questions, complete a quiz, and fetch the full result breakdown.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -40,14 +40,14 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"subject_id\": \"{{subject_id}}\",\n  \"count\": 10\n}"
+          "raw": "{\n  \"subject_id\": \"{{subject_id}}\",\n  \"count\": 10,\n  \"difficulties\": null\n}"
         },
         "url": {
           "raw": "{{base_url}}/quizzes",
           "host": ["{{base_url}}"],
           "path": ["quizzes"]
         },
-        "description": "Create and start a new quiz session for a subject.\n\n**Requires:** Bearer token\n\n**Body fields:**\n- `subject_id` — UUID of the subject\n- `count` — number of questions to draw (1–50, default 10)\n\n**Returns:** `QuizSessionWithQuestionsResponse` (201) — includes shuffled questions with choices (correct answer hidden)"
+        "description": "Create and start a new quiz session for a subject.\n\n**Requires:** Bearer token\n\n**Body fields:**\n- `subject_id` — UUID of the subject\n- `count` — number of questions to draw (1–50, default 10)\n- `difficulties` *(optional)* — array of `easy` / `medium` / `hard` to filter the question pool. Pass `null` or omit for all difficulties.\n\n**Example with difficulty filter:**\n```json\n{ \"subject_id\": \"...\", \"count\": 20, \"difficulties\": [\"medium\", \"hard\"] }\n```\n\n**Returns:** `QuizSessionWithQuestionsResponse` (201) — includes shuffled questions with choices (correct answer hidden)."
       },
       "response": []
     },
@@ -65,11 +65,23 @@
           "host": ["{{base_url}}"],
           "path": ["quizzes", "me"],
           "query": [
+            {
+              "key": "status",
+              "value": "",
+              "disabled": true,
+              "description": "Filter by status: in_progress | completed | abandoned"
+            },
+            {
+              "key": "subject_id",
+              "value": "",
+              "disabled": true,
+              "description": "Filter by subject UUID"
+            },
             { "key": "page", "value": "1" },
             { "key": "size", "value": "20", "description": "Max 100" }
           ]
         },
-        "description": "List all quiz sessions for the authenticated user.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `QuizSessionListResponse` (200)"
+        "description": "List all quiz sessions for the authenticated user. Drives the History page.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `status` *(optional)* — `in_progress` | `completed` | `abandoned`\n- `subject_id` *(optional)* — UUID, filter to a single subject\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `QuizSessionListResponse` (200)"
       },
       "response": []
     },
@@ -105,7 +117,7 @@
           "host": ["{{base_url}}"],
           "path": ["quizzes", "{{quiz_session_id}}", "questions"]
         },
-        "description": "Retrieve a quiz session along with all its questions, choices, and the IDs of already-answered questions.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionWithQuestionsResponse` (200)"
+        "description": "Retrieve a quiz session along with all its questions, choices, and the IDs of already-answered questions. Used by the player on resume.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionWithQuestionsResponse` (200) — includes `answered_question_ids` for resumability."
       },
       "response": []
     },
@@ -129,7 +141,7 @@
           "host": ["{{base_url}}"],
           "path": ["quizzes", "{{quiz_session_id}}", "answer"]
         },
-        "description": "Submit an answer for one question in a quiz session.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Body fields:**\n- `question_id` — UUID of the question being answered\n- `choice_id` — UUID of the selected choice\n\n**Returns:** `QuizAnswerResponse` (200) — reveals `is_correct`, `correct_choice_id`, `explanation`, running `score`"
+        "description": "Submit an answer for one question in a quiz session.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Body fields:**\n- `question_id` — UUID of the question being answered\n- `choice_id` — UUID of the selected choice\n\n**Returns:** `QuizAnswerResponse` (200) — reveals `is_correct`, `correct_choice_id`, `explanation`, running `score`."
       },
       "response": []
     },
@@ -147,7 +159,25 @@
           "host": ["{{base_url}}"],
           "path": ["quizzes", "{{quiz_session_id}}", "complete"]
         },
-        "description": "Mark a quiz session as completed. Call this after submitting all answers.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionResponse` (200) with final `score` and `completed_at`"
+        "description": "Mark a quiz session as completed. Call this after submitting all answers.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionResponse` (200) with final `score` and `completed_at`."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Quiz Result",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}/result",
+          "host": ["{{base_url}}"],
+          "path": ["quizzes", "{{quiz_session_id}}", "result"]
+        },
+        "description": "Full result payload for a quiz session — drives the Result page.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizResultResponse` (200) with:\n- `score`, `total`, `accuracy` (0..1)\n- `correct_count`, `incorrect_count`, `skipped_count`\n- `breakdown_by_difficulty[]` — `{ difficulty, correct, total }` per difficulty bucket\n- `trend` — accuracy delta vs prior completed quiz in same subject (signed float, `null` if no prior)\n- `questions[]` — per-question breakdown with `selected_choice_id`, `correct_choice_id`, `is_correct`, `explanation`, full `choices[]`."
       },
       "response": []
     }

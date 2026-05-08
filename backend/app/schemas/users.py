@@ -74,3 +74,37 @@ class RecommendedSubjectItem(BaseModel):
     description: str | None
 
     model_config = {"from_attributes": True}
+
+
+class ProfileBadge(BaseModel):
+    key: str
+    label: str
+    description: str
+
+
+class ProfilePublishedSet(BaseModel):
+    question_set_id: uuid.UUID
+    title: str
+    subject_id: uuid.UUID
+    subject_name: str
+    subject_code: str
+    question_count: int
+    published_at: datetime
+
+
+class UserProfileResponse(BaseModel):
+    id: uuid.UUID
+    full_name: str
+    college: str
+    academic_year: int
+    joined_at: datetime
+    completed_quizzes: int
+    accuracy_avg: float  # 0..1
+    correct_count: int
+    total_attempts: int
+    published_question_set_count: int
+    published_question_count: int
+    enrolled_subject_count: int
+    streak_days: int
+    badges: list[ProfileBadge]
+    recent_published_sets: list[ProfilePublishedSet]

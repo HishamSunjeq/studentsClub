@@ -14,6 +14,8 @@ import { Sidebar } from "./Sidebar";
 import { TopBar } from "./TopBar";
 import { CommandPalette, useCommandPalette } from "./CommandPalette";
 import { NotificationsDrawer } from "./NotificationsDrawer";
+import { useNotificationsList } from "@/api/generated/endpoints/notifications/notifications";
+import { useAuthStore } from "@/features/auth/auth.store";
 
 const MOBILE_NAV = [
   { label: "Home", icon: LayoutDashboard, to: "/dashboard" },
@@ -27,6 +29,20 @@ export function AppShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
+  const accessToken = useAuthStore((s) => s.accessToken);
+
+  // Unread count for the bell badge — refetched every 60s.
+  const { data: notifData } = useNotificationsList(
+    { size: 1, unread_only: true },
+    {
+      query: {
+        enabled: !!accessToken,
+        refetchInterval: 60_000,
+        staleTime: 30_000,
+      },
+    },
+  );
+  const unreadCount = notifData?.unread_count ?? 0;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -68,6 +84,7 @@ export function AppShell() {
           onMenuClick={() => setMobileNavOpen(true)}
           onSearchClick={() => setPaletteOpen(true)}
           onNotificationsClick={() => setNotificationsOpen(true)}
+          notificationCount={unreadCount}
         />
 
         {/* Page content */}

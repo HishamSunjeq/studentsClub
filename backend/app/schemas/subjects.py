@@ -69,3 +69,34 @@ class SubjectPublishedSetListResponse(BaseModel):
     page: int
     size: int
     pages: int
+
+
+class SubjectLeaderboardEntry(BaseModel):
+    user_id: uuid.UUID
+    full_name: str
+    completed_quizzes: int
+    accuracy_avg: float  # 0..1
+    contributions: int
+    score: int
+
+
+class SearchSubjectHit(BaseModel):
+    id: uuid.UUID
+    name: str
+    code: str
+    college: str
+    academic_year: int
+
+
+class SearchQuestionSetHit(BaseModel):
+    question_set_id: uuid.UUID
+    title: str
+    subject_id: uuid.UUID
+    subject_name: str
+    subject_code: str
+
+
+class SearchResponse(BaseModel):
+    query: str
+    subjects: list[SearchSubjectHit]
+    question_sets: list[SearchQuestionSetHit]

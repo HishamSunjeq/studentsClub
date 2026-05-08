@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-0004-4000-8000-000000000004",
     "name": "Subjects",
-    "description": "Subject listing and enrollment endpoints.",
+    "description": "Subject listing, enrollment, and per-subject discovery endpoints (members / contributors / question sets / leaderboard).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -22,7 +22,7 @@
             { "key": "size", "value": "20", "description": "Max 100" }
           ]
         },
-        "description": "List all subjects with optional filters.\n\n**Query params:**\n- `college` *(optional)* — filter by college\n- `academic_year` *(optional)* — 1–7\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `SubjectListResponse` (200)"
+        "description": "List subjects with optional filters and aggregate counts.\n\n**Query params:**\n- `college` *(optional)* — filter by college\n- `academic_year` *(optional)* — 1–7\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `SubjectListResponse` (200) — each item includes `member_count`, `published_question_set_count`, `question_count`."
       },
       "response": []
     },
@@ -58,7 +58,7 @@
           "host": ["{{base_url}}"],
           "path": ["subjects", "{{subject_id}}"]
         },
-        "description": "Retrieve a single subject by ID.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `SubjectResponse` (200)"
+        "description": "Retrieve a single subject by ID. Includes aggregate counts.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `SubjectResponse` (200) with `member_count`, `published_question_set_count`, `question_count`."
       },
       "response": []
     },
@@ -95,6 +95,80 @@
           "path": ["subjects", "{{subject_id}}", "enroll"]
         },
         "description": "Remove the authenticated user's enrollment from a subject.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** 204 No Content"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Subject Members",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/members?page=1&size=20",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "members"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "size", "value": "20", "description": "Max 100" }
+          ]
+        },
+        "description": "Paginated list of users enrolled in a subject. Drives the Members tab on Subject Detail.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `SubjectMemberListResponse` (200) — each item: `user_id`, `full_name`, `college`, `academic_year`, `enrolled_at`."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Top Contributors",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/top-contributors?limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "top-contributors"],
+          "query": [
+            { "key": "limit", "value": "10", "description": "1–50, default 10" }
+          ]
+        },
+        "description": "Top users in the subject ranked by published question-set count.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Query params:**\n- `limit` — 1–50, default 10\n\n**Returns:** `list[SubjectContributorResponse]` (200) — `user_id`, `full_name`, `question_set_count`."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Published Question Sets",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/question-sets?page=1&size=20",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "question-sets"],
+          "query": [
+            { "key": "page", "value": "1" },
+            { "key": "size", "value": "20", "description": "Max 100" }
+          ]
+        },
+        "description": "All published question sets in this subject. Drives the Question Sets tab on Subject Detail.\n\n**Path params:**\n- `subject_id` — UUID\n\n**Returns:** `SubjectPublishedSetListResponse` (200) — each item: `id`, `title`, `question_count`, `created_at`."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Subject Leaderboard",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/{{subject_id}}/leaderboard?limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["subjects", "{{subject_id}}", "leaderboard"],
+          "query": [
+            { "key": "limit", "value": "10", "description": "1–50, default 10" }
+          ]
+        },
+        "description": "Top users in the subject by composite score = `correct_answers·10 + contributions·50`.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `subject_id` — UUID\n\n**Query params:**\n- `limit` — 1–50, default 10\n\n**Returns:** `list[SubjectLeaderboardEntry]` (200) — `user_id`, `full_name`, `completed_quizzes`, `accuracy_avg` (0..1), `contributions`, `score`."
       },
       "response": []
     }

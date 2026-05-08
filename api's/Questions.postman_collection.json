@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-0007-4000-8000-000000000007",
     "name": "Questions",
-    "description": "Individual question management — update content or deactivate a question.",
+    "description": "Individual question management — update content, regenerate via AI, or deactivate a question.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -26,7 +26,25 @@
           "host": ["{{base_url}}"],
           "path": ["questions", "{{question_id}}"]
         },
-        "description": "Update a question's text, explanation, difficulty, and/or choices.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Body fields (all optional):**\n- `text` — question text\n- `explanation` — explanation shown after answering\n- `difficulty` — `easy` | `medium` | `hard`\n- `choices` — exactly 4 choices, exactly 1 must have `is_correct: true`\n\n**Returns:** `QuestionResponse` (200)"
+        "description": "Update a question's text, explanation, difficulty, and/or choices. Parent set must still be in `draft` status.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Body fields (all optional):**\n- `text` — question text\n- `explanation` — explanation shown after answering\n- `difficulty` — `easy` | `medium` | `hard`\n- `choices` — exactly 4 choices, exactly 1 must have `is_correct: true`\n\n**Returns:** `QuestionResponse` (200)"
+      },
+      "response": []
+    },
+    {
+      "name": "Regenerate Question",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/questions/{{question_id}}/regenerate",
+          "host": ["{{base_url}}"],
+          "path": ["questions", "{{question_id}}", "regenerate"]
+        },
+        "description": "Re-run the AI provider on this question's `source_excerpt` (or current text) and replace text/explanation/difficulty/choices in place. Synchronous call.\n\n**Requires:** Bearer token (must own the parent question set, must be in `draft` status, question must have a non-empty source).\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** `QuestionResponse` (200) — fresh AI-drafted content."
       },
       "response": []
     },
@@ -44,7 +62,7 @@
           "host": ["{{base_url}}"],
           "path": ["questions", "{{question_id}}"]
         },
-        "description": "Soft-delete (deactivate) a question so it no longer appears in quizzes.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** 204 No Content"
+        "description": "Soft-delete (deactivate) a question so it no longer appears in quizzes.\n\n**Requires:** Bearer token (must own the parent question set, set must be in `draft` status)\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** 204 No Content"
       },
       "response": []
     }

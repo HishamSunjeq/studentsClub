@@ -6,6 +6,7 @@ import {
   getSubjectsListMineQueryKey,
   useSubjectsEnroll,
   useSubjectsGet,
+  useSubjectsGetLeaderboard,
   useSubjectsGetMembers,
   useSubjectsGetPublishedSets,
   useSubjectsGetTopContributors,
@@ -81,6 +82,13 @@ export default function SubjectDetailPage() {
     { page: setsPage, size: 20 },
     { query: { enabled: !!id } },
   );
+
+  const { data: leaderboard, isLoading: loadingLeaderboard } =
+    useSubjectsGetLeaderboard(
+      id ?? "",
+      { limit: 10 },
+      { query: { enabled: !!id } },
+    );
 
   function handleEnrollToggle() {
     if (!user) {
@@ -367,17 +375,64 @@ export default function SubjectDetailPage() {
           )}
         </TabsContent>
 
-        {/* Leaderboard tab (stub) */}
-        <TabsContent value="leaderboard" className="mt-6">
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-            <Trophy className="size-10 text-muted-foreground/40" />
-            <p className="text-sm font-medium text-foreground">
-              Leaderboard coming soon
-            </p>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              Subject leaderboards will be available in a future update.
-            </p>
-          </div>
+        {/* Leaderboard tab */}
+        <TabsContent value="leaderboard" className="mt-6 space-y-3">
+          {loadingLeaderboard ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 rounded-lg" />
+            ))
+          ) : !leaderboard?.length ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+              <Trophy className="size-10 text-muted-foreground/40" />
+              <p className="text-sm font-medium text-foreground">
+                No leaderboard data yet
+              </p>
+              <p className="max-w-xs text-xs text-muted-foreground">
+                Once members complete quizzes or publish question sets, they'll
+                appear here.
+              </p>
+            </div>
+          ) : (
+            leaderboard.map((entry, idx) => {
+              const accuracyPct = Math.round((entry.accuracy_avg ?? 0) * 100);
+              const isPodium = idx < 3;
+              return (
+                <button
+                  key={entry.user_id}
+                  onClick={() => navigate(`/users/${entry.user_id}`)}
+                  className="group flex w-full items-center gap-4 rounded-lg border border-border bg-surface-low px-4 py-3 text-left transition-colors hover:border-ring/40"
+                >
+                  <span
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                      isPodium
+                        ? idx === 0
+                          ? "bg-[color:var(--warning)]/20 text-[color:var(--warning)]"
+                          : idx === 1
+                            ? "bg-muted text-foreground"
+                            : "bg-[color:var(--success)]/15 text-[color:var(--success)]"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground group-hover:text-primary">
+                      {entry.full_name}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {entry.completed_quizzes} quiz
+                      {entry.completed_quizzes === 1 ? "" : "zes"} ·{" "}
+                      {accuracyPct}% accuracy · {entry.contributions} contribution
+                      {entry.contributions === 1 ? "" : "s"}
+                    </p>
+                  </div>
+                  <span className="rounded-md bg-primary/10 px-2 py-1 text-[10px] font-mono font-semibold text-primary">
+                    {entry.score}
+                  </span>
+                </button>
+              );
+            })
+          )}
         </TabsContent>
       </Tabs>
     </div>

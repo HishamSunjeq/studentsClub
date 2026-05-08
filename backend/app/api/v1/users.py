@@ -1,13 +1,16 @@
+from uuid import UUID
+
 from fastapi import APIRouter
 
 from app.api.deps import CurrentUser, DBSession
 from app.schemas.users import (
     ContinueSessionResponse,
     RecommendedSubjectItem,
+    UserProfileResponse,
     UserResponse,
     UserStatsResponse,
 )
-from app.services import stats_service
+from app.services import profile_service, stats_service
 
 router = APIRouter()
 
@@ -69,3 +72,17 @@ async def get_my_recommended_subjects(
         db=db, user=current_user, limit=4
     )
     return [RecommendedSubjectItem.model_validate(s) for s in subjects]
+
+
+@router.get(
+    "/{user_id}/profile",
+    response_model=UserProfileResponse,
+    operation_id="users_get_profile",
+)
+async def get_user_profile(
+    user_id: UUID,
+    db: DBSession,
+    _current: CurrentUser,  # require auth, but profile is otherwise public-shaped
+) -> UserProfileResponse:
+    payload = await profile_service.get_user_profile(db=db, user_id=user_id)
+    return UserProfileResponse(**payload)

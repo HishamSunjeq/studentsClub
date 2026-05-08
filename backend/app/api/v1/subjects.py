@@ -6,12 +6,13 @@ from app.api.deps import CurrentUser, DBSession
 from app.schemas.subjects import (
     EnrollmentResponse,
     SubjectContributorResponse,
+    SubjectLeaderboardEntry,
     SubjectListResponse,
     SubjectMemberListResponse,
     SubjectPublishedSetListResponse,
     SubjectResponse,
 )
-from app.services import subjects_service
+from app.services import profile_service, subjects_service
 
 router = APIRouter()
 
@@ -162,3 +163,20 @@ async def get_published_sets(
     return SubjectPublishedSetListResponse(
         items=sets, total=total, page=page, size=size, pages=pages
     )
+
+
+@router.get(
+    "/{subject_id}/leaderboard",
+    response_model=list[SubjectLeaderboardEntry],
+    operation_id="subjects_get_leaderboard",
+)
+async def get_leaderboard(
+    subject_id: uuid.UUID,
+    db: DBSession,
+    _current: CurrentUser,
+    limit: int = Query(default=10, ge=1, le=50),
+) -> list[SubjectLeaderboardEntry]:
+    rows = await profile_service.get_subject_leaderboard(
+        db=db, subject_id=subject_id, limit=limit
+    )
+    return [SubjectLeaderboardEntry(**r) for r in rows]
