@@ -9,6 +9,7 @@ log = structlog.get_logger()
 
 
 def _make_client():  # type: ignore[return]
+    """Client for server-side S3 operations (uses Docker-internal endpoint)."""
     kwargs: dict = dict(
         region_name=settings.s3_region,
         aws_access_key_id=settings.s3_access_key,
@@ -20,17 +21,30 @@ def _make_client():  # type: ignore[return]
     return boto3.client("s3", **kwargs)
 
 
-def _rewrite_for_client(url: str) -> str:
-    """Swap Docker-internal MinIO hostname for the browser-reachable public URL."""
-    if settings.s3_public_endpoint_url and settings.s3_endpoint_url:
-        return url.replace(settings.s3_endpoint_url, settings.s3_public_endpoint_url, 1)
-    return url
+def _make_public_client():  # type: ignore[return]
+    """Client for generating browser-facing presigned URLs.
+
+    S3v4 signatures include the host in the signing payload, so the URL must
+    be signed against the host the browser will actually reach (e.g.
+    ``localhost:9000``), NOT the Docker-internal name (``minio:9000``).
+    Falls back to the normal internal client when no public endpoint is set.
+    """
+    endpoint = settings.s3_public_endpoint_url or settings.s3_endpoint_url
+    kwargs: dict = dict(
+        region_name=settings.s3_region,
+        aws_access_key_id=settings.s3_access_key,
+        aws_secret_access_key=settings.s3_secret_key,
+        config=Config(signature_version="s3v4"),
+    )
+    if endpoint:
+        kwargs["endpoint_url"] = endpoint
+    return boto3.client("s3", **kwargs)
 
 
 def generate_presigned_put_url(
     s3_key: str, content_type: str, expires_in: int = 900
 ) -> str:
-    client = _make_client()
+    client = _make_public_client()
     url: str = client.generate_presigned_url(
         "put_object",
         Params={
@@ -40,17 +54,17 @@ def generate_presigned_put_url(
         },
         ExpiresIn=expires_in,
     )
-    return _rewrite_for_client(url)
+    return url
 
 
 def generate_presigned_get_url(s3_key: str, expires_in: int = 3600) -> str:
-    client = _make_client()
+    client = _make_public_client()
     url: str = client.generate_presigned_url(
         "get_object",
         Params={"Bucket": settings.s3_bucket, "Key": s3_key},
         ExpiresIn=expires_in,
     )
-    return _rewrite_for_client(url)
+    return url
 
 
 def download_file(s3_key: str) -> bytes:
