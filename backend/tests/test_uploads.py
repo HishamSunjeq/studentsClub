@@ -107,7 +107,7 @@ class TestFinalizeUpload:
         )
         assert r.status_code == 200
         body = r.json()
-        assert body["status"] == "finalized"
+        assert body["status"] == "extracting"
         assert body["finalized_at"] is not None
 
     async def test_finalize_twice_returns_409(self, client: AsyncClient, db: AsyncSession) -> None:
@@ -190,7 +190,7 @@ class TestGetUpload:
             f"/api/v1/uploads/{upload_id}",
             headers={"Authorization": f"Bearer {token}"},
         )
-        assert r2.json()["status"] == "finalized"
+        assert r2.json()["status"] == "extracting"
 
     async def test_get_wrong_user_returns_403(
         self, client: AsyncClient, db: AsyncSession

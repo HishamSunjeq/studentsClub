@@ -1,12 +1,11 @@
 import { useMutation, useQueries } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   CheckCircle2,
   CloudUpload,
   FileText,
   Loader2,
-  Sparkles,
   X,
   XCircle,
 } from "lucide-react";
@@ -16,18 +15,22 @@ import {
   uploadsGet,
 } from "@/api/generated/endpoints/uploads/uploads";
 import { useSubjectsListMine } from "@/api/generated/endpoints/subjects/subjects";
-import type { UploadResponse } from "@/api/generated/schemas";
+import type { UploadDetailResponse } from "@/api/generated/schemas";
 import { useAuthStore } from "@/features/auth/auth.store";
-import { ALLOWED_TYPES, MAX_BYTES, uploadToS3 } from "@/features/uploads/uploads.utils";
+import {
+  ALLOWED_TYPES,
+  MAX_BYTES,
+  uploadToS3,
+} from "@/features/uploads/uploads.utils";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/design/PageHeader";
 import { cn } from "@/lib/utils";
 
-type QueueItemStatus =
+type LocalStatus =
   | "pending"
   | "uploading"
   | "finalizing"
-  | "processing"
+  | "extracting"
   | "ready"
   | "error";
 
@@ -35,10 +38,9 @@ type QueueItem = {
   localId: string;
   file: File;
   subjectId: string;
-  status: QueueItemStatus;
+  status: LocalStatus;
   progress: number;
   uploadId?: string;
-  questionSetId?: string;
   errorMsg?: string;
 };
 
@@ -57,36 +59,42 @@ export default function UploadPage() {
     { query: { enabled: !!user } },
   );
 
-  // Poll uploads that are still being processed (have uploadId, not yet ready/error).
+  // Poll items still mid-extraction.
   const pollableItems = queue.filter(
-    (q) => q.uploadId && (q.status === "processing" || q.status === "finalizing"),
+    (q) => q.uploadId && q.status === "extracting",
   );
   const pollResults = useQueries({
     queries: pollableItems.map((q) => ({
-      queryKey: ["uploads", q.uploadId, "poll"],
+      queryKey: ["uploads", q.uploadId, "drop-and-go-poll"],
       queryFn: () => uploadsGet(q.uploadId!),
-      refetchInterval: 1500,
+      refetchInterval: 2000,
       enabled: !!q.uploadId,
     })),
   });
 
-  // Reflect server-side status into the queue
+  // Reflect server-side status into the queue (extracting → ready/failed).
   pollResults.forEach((res, i) => {
-    const data = res.data as UploadResponse | undefined;
+    const data = res.data as UploadDetailResponse | undefined;
     if (!data) return;
     const item = pollableItems[i];
     if (!item) return;
-    if (data.status === "finalized" && item.status !== "ready") {
+    if (data.status === "ready" && item.status !== "ready") {
       setQueue((q) =>
         q.map((it) =>
-          it.localId === item.localId ? { ...it, status: "ready", progress: 100 } : it,
+          it.localId === item.localId
+            ? { ...it, status: "ready", progress: 100 }
+            : it,
         ),
       );
     } else if (data.status === "failed" && item.status !== "error") {
       setQueue((q) =>
         q.map((it) =>
           it.localId === item.localId
-            ? { ...it, status: "error", errorMsg: "AI extraction failed" }
+            ? {
+                ...it,
+                status: "error",
+                errorMsg: data.extraction_error ?? "Extraction failed",
+              }
             : it,
         ),
       );
@@ -118,7 +126,9 @@ export default function UploadPage() {
   }
 
   function updateItem(localId: string, patch: Partial<QueueItem>) {
-    setQueue((q) => q.map((it) => (it.localId === localId ? { ...it, ...patch } : it)));
+    setQueue((q) =>
+      q.map((it) => (it.localId === localId ? { ...it, ...patch } : it)),
+    );
   }
 
   function removeItem(localId: string) {
@@ -142,8 +152,8 @@ export default function UploadPage() {
       updateItem(item.localId, { progress: 70, status: "finalizing" });
 
       await uploadsFinalize(presign.upload_id);
-      updateItem(item.localId, { progress: 90, status: "processing" });
-      // From here, the polling effect picks up the ready/failed transition.
+      updateItem(item.localId, { progress: 90, status: "extracting" });
+      // Polling effect picks up the ready/failed transition.
     },
     onError: (err: Error, item: QueueItem) => {
       updateItem(item.localId, {
@@ -171,7 +181,12 @@ export default function UploadPage() {
       <PageHeader
         eyebrow="New Material"
         title="Upload study material"
-        description="Drop your notes, slides, or scanned exams. AI generates draft questions for your review."
+        description="Drop your notes, slides, or scanned exams. Once extracted, you'll be able to configure AI question generation per file."
+        actions={
+          <Button asChild variant="outline">
+            <Link to="/uploads">My uploads</Link>
+          </Button>
+        }
       />
 
       {/* Drop zone */}
@@ -207,7 +222,8 @@ export default function UploadPage() {
         </div>
         <div>
           <p className="text-base font-medium text-foreground">
-            Drop files here or <span className="text-primary underline">browse</span>
+            Drop files here or{" "}
+            <span className="text-primary underline">browse</span>
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             PDF, DOCX, PNG, JPEG, WEBP · up to 50 MB each
@@ -217,7 +233,7 @@ export default function UploadPage() {
 
       {pickError && <p className="text-sm text-destructive">{pickError}</p>}
 
-      {/* Default subject for the batch */}
+      {/* Default subject */}
       {mySubjects && mySubjects.items.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -262,10 +278,6 @@ export default function UploadPage() {
                   updateItem(item.localId, { subjectId: sid })
                 }
                 onRemove={() => removeItem(item.localId)}
-                onReviewClick={() =>
-                  // Drafts list is the simplest target since queryset id isn't on UploadResponse
-                  navigate(`/drafts`)
-                }
               />
             ))}
           </div>
@@ -276,14 +288,19 @@ export default function UploadPage() {
 }
 
 const STATUS_META: Record<
-  QueueItemStatus,
-  { label: string; tone: string; Icon: React.ComponentType<{ className?: string }> }
+  LocalStatus,
+  {
+    label: string;
+    tone: string;
+    Icon: React.ComponentType<{ className?: string }>;
+    spin?: boolean;
+  }
 > = {
   pending: { label: "Ready to upload", tone: "text-muted-foreground", Icon: FileText },
-  uploading: { label: "Uploading…", tone: "text-primary", Icon: Loader2 },
-  finalizing: { label: "Finalizing…", tone: "text-primary", Icon: Loader2 },
-  processing: { label: "AI generating…", tone: "text-primary", Icon: Sparkles },
-  ready: { label: "Draft ready", tone: "text-[color:var(--success)]", Icon: CheckCircle2 },
+  uploading: { label: "Uploading…", tone: "text-primary", Icon: Loader2, spin: true },
+  finalizing: { label: "Finalizing…", tone: "text-primary", Icon: Loader2, spin: true },
+  extracting: { label: "Extracting text…", tone: "text-primary", Icon: Loader2, spin: true },
+  ready: { label: "Ready to generate", tone: "text-[color:var(--success)]", Icon: CheckCircle2 },
   error: { label: "Failed", tone: "text-destructive", Icon: XCircle },
 };
 
@@ -292,19 +309,17 @@ function UploadRow({
   subjects,
   onSubjectChange,
   onRemove,
-  onReviewClick,
 }: {
   item: QueueItem;
   subjects: { id: string; name: string; code: string }[];
   onSubjectChange: (id: string) => void;
   onRemove: () => void;
-  onReviewClick: () => void;
 }) {
   const meta = STATUS_META[item.status];
   const isInProgress =
     item.status === "uploading" ||
     item.status === "finalizing" ||
-    item.status === "processing";
+    item.status === "extracting";
 
   return (
     <div className="rounded-[14px] border border-border bg-card p-5">
@@ -331,13 +346,7 @@ function UploadRow({
             )}
           >
             <meta.Icon
-              className={cn(
-                "size-3.5",
-                (item.status === "uploading" ||
-                  item.status === "finalizing" ||
-                  item.status === "processing") &&
-                  "animate-spin",
-              )}
+              className={cn("size-3.5", meta.spin && "animate-spin")}
             />
             {meta.label}
           </span>
@@ -353,7 +362,6 @@ function UploadRow({
         </div>
       </div>
 
-      {/* Per-file subject (only editable while pending) */}
       {item.status === "pending" && subjects.length > 0 && (
         <div className="mt-4">
           <select
@@ -371,7 +379,6 @@ function UploadRow({
         </div>
       )}
 
-      {/* Progress bar */}
       {isInProgress && (
         <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
           <div
@@ -385,10 +392,12 @@ function UploadRow({
         <p className="mt-3 text-xs text-destructive">{item.errorMsg}</p>
       )}
 
-      {item.status === "ready" && (
+      {item.status === "ready" && item.uploadId && (
         <div className="mt-4 flex justify-end">
-          <Button size="sm" variant="outline" onClick={onReviewClick}>
-            Review draft →
+          <Button asChild size="sm">
+            <Link to={`/uploads/${item.uploadId}`}>
+              Configure & generate →
+            </Link>
           </Button>
         </div>
       )}

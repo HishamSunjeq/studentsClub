@@ -16,6 +16,12 @@ const ResetPasswordPage = lazy(() => import("@/features/auth/ResetPasswordPage")
 const DashboardPage = lazy(() => import("@/features/dashboard/DashboardPage"));
 const SubjectsPage = lazy(() => import("@/features/subjects/SubjectsPage"));
 const UploadPage = lazy(() => import("@/features/uploads/UploadPage"));
+const UploadsListPage = lazy(
+  () => import("@/features/uploads/UploadsListPage"),
+);
+const UploadDetailPage = lazy(
+  () => import("@/features/uploads/UploadDetailPage"),
+);
 const DraftsListPage = lazy(
   () => import("@/features/question-sets/DraftsListPage"),
 );
@@ -69,6 +75,8 @@ export function AppRouter() {
           <Route path="/subjects" element={<SubjectsPage />} />
           <Route path="/subjects/:id" element={<SubjectDetailPage />} />
           <Route path="/upload" element={<UploadPage />} />
+          <Route path="/uploads" element={<UploadsListPage />} />
+          <Route path="/uploads/:id" element={<UploadDetailPage />} />
           <Route path="/drafts" element={<DraftsListPage />} />
           <Route path="/drafts/:id" element={<ReviewPage />} />
           <Route path="/quiz" element={<QuizStartPage />} />

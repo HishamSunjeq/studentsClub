@@ -18,6 +18,8 @@ const STATUS_FILTERS: { value: QuestionSetStatus | "all"; label: string }[] = [
 ];
 
 const STATUS_STYLES: Record<QuestionSetStatus, string> = {
+  generating: "bg-primary/10 text-primary border-primary/20",
+  generation_failed: "bg-destructive/10 text-destructive border-destructive/20",
   draft: "bg-[color:var(--warning)]/10 text-[color:var(--warning)] border-[color:var(--warning)]/20",
   published:
     "bg-[color:var(--success)]/10 text-[color:var(--success)] border-[color:var(--success)]/20",

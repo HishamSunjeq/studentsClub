@@ -1,14 +1,17 @@
 import enum
 import uuid
+from typing import Any
 
 from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer, SmallInteger, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
 
 class QuestionSetStatus(str, enum.Enum):
+    generating = "generating"             # AI worker in flight
+    generation_failed = "generation_failed"  # AI worker errored
     draft = "draft"
     published = "published"
     rejected = "rejected"
@@ -50,8 +53,12 @@ class QuestionSet(UUIDMixin, TimestampMixin, Base):
         default=QuestionSetStatus.draft,
         server_default="draft",
     )
-    ai_model: Mapped[str] = mapped_column(Text, nullable=False)
+    ai_model: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
     tokens_used: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    generation_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default="{}"
+    )
+    generation_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class Question(UUIDMixin, TimestampMixin, Base):

@@ -59,6 +59,11 @@ def download_file(s3_key: str) -> bytes:
     return response["Body"].read()  # type: ignore[return-value]
 
 
+def delete_object(s3_key: str) -> None:
+    client = _make_client()
+    client.delete_object(Bucket=settings.s3_bucket, Key=s3_key)
+
+
 def ensure_bucket_exists() -> None:
     client = _make_client()
     try:

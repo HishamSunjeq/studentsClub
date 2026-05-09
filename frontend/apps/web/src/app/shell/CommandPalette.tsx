@@ -34,6 +34,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Browse Subjects", icon: BookOpen, to: "/subjects" },
   { label: "Upload Material", icon: Upload, to: "/upload" },
+  { label: "My Uploads", icon: FileText, to: "/uploads" },
   { label: "My Drafts", icon: FileText, to: "/drafts" },
   { label: "Start a Quiz", icon: BrainCircuit, to: "/quiz" },
   { label: "Quiz History", icon: History, to: "/history" },

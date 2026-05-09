@@ -55,7 +55,7 @@ async def _seed_published_set(
         content_type="application/pdf",
         size_bytes=10_000,
         s3_key=f"uploads/{user.id}/{uuid.uuid4()}/notes.pdf",
-        status=UploadStatus.finalized,
+        status=UploadStatus.ready,
     )
     db.add(upload)
     await db.flush()

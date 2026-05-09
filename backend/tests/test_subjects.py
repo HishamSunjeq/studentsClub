@@ -240,7 +240,7 @@ async def _seed_user_with_upload(db: AsyncSession, email: str) -> tuple:
         content_type="application/pdf",
         size_bytes=1024,
         s3_key=f"uploads/{uuid.uuid4()}/test.pdf",
-        status=UploadStatus.finalized,
+        status=UploadStatus.ready,
     )
     db.add(upload)
     await db.flush()
