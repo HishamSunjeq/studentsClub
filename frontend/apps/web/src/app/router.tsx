@@ -36,6 +36,15 @@ const SubjectDetailPage = lazy(
   () => import("@/features/subjects/SubjectDetailPage"),
 );
 
+// Admin control plane (gated by role==="admin" inside AdminLayout)
+const AdminLayout = lazy(() => import("@/features/admin/AdminLayout"));
+const AIDashboardPage = lazy(() => import("@/features/admin/AIDashboardPage"));
+const AIRunsPage = lazy(() => import("@/features/admin/AIRunsPage"));
+const CredentialsPage = lazy(() => import("@/features/admin/CredentialsPage"));
+const ModelsPage = lazy(() => import("@/features/admin/ModelsPage"));
+const PromptsPage = lazy(() => import("@/features/admin/PromptsPage"));
+const ProfilesPage = lazy(() => import("@/features/admin/ProfilesPage"));
+
 // Dev only
 const ComponentsShowcasePage = lazy(
   () => import("@/features/dev/ComponentsShowcasePage"),
@@ -90,6 +99,16 @@ export function AppRouter() {
             path="/support"
             element={<PlaceholderPage title="Support" />}
           />
+
+          {/* Admin control plane */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AIDashboardPage />} />
+            <Route path="runs" element={<AIRunsPage />} />
+            <Route path="credentials" element={<CredentialsPage />} />
+            <Route path="models" element={<ModelsPage />} />
+            <Route path="prompts" element={<PromptsPage />} />
+            <Route path="profiles" element={<ProfilesPage />} />
+          </Route>
         </Route>
 
         {/* Dev */}
