@@ -217,3 +217,94 @@ class ProfileUpdateRequest(BaseModel):
 
 class ProfileListResponse(BaseModel):
     items: list[ProfileResponse]
+
+
+# ---------- ai_runs (telemetry) --------------------------------------------
+
+
+class AIRunResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    parent_run_id: uuid.UUID | None
+    question_set_id: uuid.UUID | None
+    user_id: uuid.UUID | None
+    task_name: str
+    provider: str
+    model: str
+    credential_alias: str | None
+    prompt_version_id: uuid.UUID | None
+    input_tokens: int
+    output_tokens: int
+    cost_usd: Decimal
+    latency_ms: int | None
+    cache_hit: bool
+    status: str
+    error: str | None
+    created_at: datetime
+
+
+class AIRunDetailResponse(AIRunResponse):
+    meta: dict
+
+
+class AIRunListResponse(BaseModel):
+    items: list[AIRunResponse]
+    total: int
+    page: int
+    size: int
+    # Rollup over the *filtered* result set (not just the page).
+    total_cost_usd: Decimal
+    total_input_tokens: int
+    total_output_tokens: int
+
+
+# ---------- ai metrics (dashboard) -----------------------------------------
+
+
+class MetricPoint(BaseModel):
+    day: str
+    cost_usd: Decimal
+    input_tokens: int
+    output_tokens: int
+    calls: int
+    cache_hits: int
+
+
+class MetricsBreakdownRow(BaseModel):
+    key: str
+    cost_usd: Decimal
+    calls: int
+
+
+class AIMetricsResponse(BaseModel):
+    range_days: int
+    total_cost_usd: Decimal
+    total_calls: int
+    total_input_tokens: int
+    total_output_tokens: int
+    cache_hit_rate: float
+    p50_latency_ms: int | None
+    p95_latency_ms: int | None
+    daily: list[MetricPoint]
+    by_provider: list[MetricsBreakdownRow]
+    by_model: list[MetricsBreakdownRow]
+    by_credential: list[MetricsBreakdownRow]
+
+
+# ---------- chunks (source grounding) --------------------------------------
+
+
+class ChunkResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    upload_id: uuid.UUID
+    subject_id: uuid.UUID | None
+    position: int
+    section_title: str | None
+    text: str
+    doc_type: str | None
+    language: str | None
+
+
+class ChunkListResponse(BaseModel):
+    items: list[ChunkResponse]
