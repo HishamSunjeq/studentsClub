@@ -60,6 +60,12 @@ class QuestionSet(UUIDMixin, TimestampMixin, Base):
         JSONB, nullable=False, default=dict, server_default="{}"
     )
     generation_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Phase 6 replay: links a re-run to the QuestionSet it was cloned from.
+    parent_question_set_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("question_sets.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
 
 class Question(UUIDMixin, TimestampMixin, Base):

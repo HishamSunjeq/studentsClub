@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, status
 
 from app.api.deps import CurrentUser, DBSession
 from app.models.question import QuestionSetStatus
@@ -8,6 +8,7 @@ from app.schemas.question_sets import (
     QuestionChoiceResponse,
     QuestionResponse,
     QuestionSetListResponse,
+    QuestionSetReplayRequest,
     QuestionSetResponse,
     QuestionSetUpdateRequest,
     QuestionSetWithQuestionsResponse,
@@ -101,4 +102,22 @@ async def reject_question_set(
     qs_id: UUID, current_user: CurrentUser, db: DBSession
 ) -> QuestionSetResponse:
     qs = await question_sets_service.reject(db=db, qs_id=qs_id, user=current_user)
+    return QuestionSetResponse.model_validate(qs)
+
+
+@router.post(
+    "/{qs_id}/replay",
+    status_code=status.HTTP_202_ACCEPTED,
+    response_model=QuestionSetResponse,
+    operation_id="question_sets_replay",
+)
+async def replay_question_set(
+    qs_id: UUID,
+    payload: QuestionSetReplayRequest,
+    current_user: CurrentUser,
+    db: DBSession,
+) -> QuestionSetResponse:
+    qs = await question_sets_service.replay(
+        db=db, qs_id=qs_id, user=current_user, overrides=payload.model_dump()
+    )
     return QuestionSetResponse.model_validate(qs)

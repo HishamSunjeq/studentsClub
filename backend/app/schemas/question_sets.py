@@ -38,10 +38,20 @@ class QuestionSetResponse(BaseModel):
     status: QuestionSetStatus
     ai_model: str
     tokens_used: int
+    parent_question_set_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class QuestionSetReplayRequest(BaseModel):
+    """Override any control input for a re-run; omit to inherit the original."""
+
+    profile_id: UUID | None = None
+    prompt_version_id: UUID | None = None
+    model_id: UUID | None = None
+    credential_alias: str | None = None
 
 
 class QuestionSetWithQuestionsResponse(QuestionSetResponse):
