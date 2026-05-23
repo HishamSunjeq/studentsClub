@@ -1,9 +1,10 @@
 import enum
 import uuid
+from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer, SmallInteger, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer, Numeric, SmallInteger, Text
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
@@ -83,6 +84,21 @@ class Question(UUIDMixin, TimestampMixin, Base):
         Boolean, nullable=False, default=True, server_default="true"
     )
     position: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+
+    # Phase 3 RAG additions.
+    quality_score: Mapped[Decimal | None] = mapped_column(Numeric(3, 1), nullable=True)
+    source_chunk_ids: Mapped[list[uuid.UUID]] = mapped_column(
+        ARRAY(UUID(as_uuid=True)),
+        nullable=False,
+        default=list,
+        server_default="ARRAY[]::uuid[]",
+    )
+    prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+    auto_rejected: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
 
 
 class QuestionChoice(UUIDMixin, Base):

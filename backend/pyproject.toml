@@ -43,6 +43,17 @@ dependencies = [
     "anthropic==0.42.0",
     "openai==1.59.3",
 
+    # RAG / Qdrant (Phase 3)
+    # fastembed is intentionally NOT pulled via qdrant-client's extra: the
+    # 1.12.1 [fastembed] extra pins fastembed<0.4 which pins pillow<11 and
+    # collides with our pillow==11.0.0 (used by Tesseract OCR). We declare
+    # them separately and let fastembed pick its own pillow range.
+    "qdrant-client==1.12.1",
+    "fastembed==0.6.1",
+
+    # Credential encryption (Phase 2)
+    "cryptography==44.0.0",
+
     # Logging / observability
     "structlog==24.4.0",
 

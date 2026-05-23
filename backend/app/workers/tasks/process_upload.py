@@ -59,6 +59,18 @@ async def _async_run(upload_id: str) -> dict:
             upload.extraction_error = None
             upload.status = UploadStatus.ready
 
+    # Phase 3: chain into the RAG embedding pipeline. Best-effort dispatch —
+    # if Redis/Celery is misconfigured we still return success on extraction.
+    try:
+        from app.workers.tasks.embed_chunks import run as embed_run
+
+        embed_run.apply_async(args=[upload_id], queue="embeddings")
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "Failed to dispatch embed_chunks for upload=%s", upload_id
+        )
+
     return {"upload_id": upload_id, "chars": len(text)}
 
 
