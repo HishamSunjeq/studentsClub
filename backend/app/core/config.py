@@ -28,6 +28,32 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
 
+    # AI rate limits (Phase 1). Per-provider request and token rates per minute.
+    # Defaults are generous; tighten in production based on actual quotas.
+    ai_default_rpm: int = 60
+    ai_default_tpm: int = 100_000
+    anthropic_rpm: int = 50
+    anthropic_tpm: int = 80_000
+    openai_rpm: int = 500
+    openai_tpm: int = 200_000
+    openai_embed_rpm: int = 3000
+
+    # Qdrant (Phase 3 RAG)
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
+    qdrant_prefer_grpc: bool = False
+
+    # AI cost guardrails (Phase 1).
+    user_daily_token_budget: int = 500_000
+    qs_max_tokens: int = 200_000
+
+    # AI result cache TTL (Phase 1).
+    ai_cache_ttl_seconds: int = 60 * 60 * 24  # 24h
+
+    # AI credential encryption master key (Phase 2). Fernet 32-byte url-safe base64.
+    # Empty in dev — credentials feature gracefully degrades to env-only when missing.
+    ai_credential_key: str = ""
+
     max_upload_bytes: int = 52_428_800
     daily_upload_limit_per_user: int = 10
 
