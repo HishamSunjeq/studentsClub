@@ -9,6 +9,7 @@ import {
   History,
   LayoutDashboard,
   Settings,
+  ShieldCheck,
   Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,11 @@ type SidebarProps = {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const { user } = useAuthStore();
+
+  const secondaryNav =
+    user?.role === "admin"
+      ? [{ label: "Admin", icon: ShieldCheck, to: "/admin" }, ...SECONDARY_NAV]
+      : SECONDARY_NAV;
 
   return (
     <aside
@@ -105,7 +111,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* Secondary nav + CTA */}
       <div className="mt-auto border-t border-border px-3 pt-4">
         <ul className="space-y-0.5" onClick={onClose}>
-          {SECONDARY_NAV.map((item) => (
+          {secondaryNav.map((item) => (
             <li key={item.to}>
               <NavLink
                 to={item.to}
