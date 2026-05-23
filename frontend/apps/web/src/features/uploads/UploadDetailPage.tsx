@@ -5,10 +5,13 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
+  CheckCircle2,
   Download,
   FileText,
+  Loader2,
   Sparkles,
   Trash2,
+  XCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -32,6 +35,7 @@ import {
   UPLOAD_STATUS_META,
   formatBytes,
 } from "./status-meta";
+import { useUploadEvents, type UploadEvent } from "./useUploadEvents";
 
 const GENERATION_LS_KEY = "sc-upload-generation-settings";
 
@@ -58,18 +62,29 @@ export default function UploadDetailPage() {
   const { data: upload, isLoading } = useUploadsGet(id ?? "", {
     query: {
       enabled: !!user && !!id,
-      // Poll while extracting or any QS is still generating.
+      // SSE drives live generation progress; polling is a fallback. Poll fast
+      // during extraction (no events emitted there), slow during generation.
       refetchInterval: (query) => {
         const u = query.state.data;
         if (!u) return false;
+        if (u.status === "extracting" || u.status === "pending") return 2000;
         const anyGenerating = (u.question_sets ?? []).some(
           (qs) => qs.status === "generating",
         );
-        return u.status === "extracting" || u.status === "pending" || anyGenerating
-          ? 2000
-          : false;
+        return anyGenerating ? 8000 : false;
       },
     },
+  });
+
+  const anyGenerating = (upload?.question_sets ?? []).some(
+    (qs) => qs.status === "generating",
+  );
+
+  const generationEvents = useUploadEvents(id, anyGenerating, () => {
+    if (id)
+      void queryClient.invalidateQueries({
+        queryKey: getUploadsGetQueryKey(id),
+      });
   });
 
   const { data: mySubjects } = useSubjectsListMine(
@@ -259,6 +274,11 @@ export default function UploadDetailPage() {
         />
       </div>
 
+      {/* Live generation progress (SSE) */}
+      {anyGenerating && generationEvents.events.length > 0 && (
+        <GenerationProgress state={generationEvents} />
+      )}
+
       {/* Generations history */}
       <section className="space-y-3">
         <h2 className="text-base font-medium text-foreground">
@@ -332,6 +352,148 @@ export default function UploadDetailPage() {
         )}
       </section>
     </div>
+  );
+}
+
+// ---------- Live generation progress (SSE) ----------
+
+type StageKey =
+  | "analyze"
+  | "segment"
+  | "sections"
+  | "judge"
+  | "dedupe"
+  | "done";
+
+const STAGE_LABELS: Record<StageKey, string> = {
+  analyze: "Analyzing document",
+  segment: "Segmenting sections",
+  sections: "Generating questions per section",
+  judge: "Judging quality",
+  dedupe: "Removing duplicates",
+  done: "Complete",
+};
+
+const STAGE_ORDER: StageKey[] = [
+  "analyze",
+  "segment",
+  "sections",
+  "judge",
+  "dedupe",
+  "done",
+];
+
+function deriveStage(events: UploadEvent[]): StageKey {
+  let stage: StageKey = "analyze";
+  for (const e of events) {
+    if (e.type === "analyze.completed") stage = "segment";
+    else if (e.type === "segment.completed") stage = "sections";
+    else if (e.type === "judge.completed") stage = "judge";
+    else if (e.type === "dedupe.completed") stage = "dedupe";
+    else if (e.type === "generate.completed") stage = "done";
+  }
+  return stage;
+}
+
+function GenerationProgress({
+  state,
+}: {
+  state: ReturnType<typeof useUploadEvents>;
+}) {
+  const { events, errored } = state;
+  const stage = deriveStage(events);
+  const currentIdx = STAGE_ORDER.indexOf(stage);
+
+  // Per-section completion tracking.
+  const sectionsTotal =
+    (events.find((e) => e.type === "segment.completed") as
+      | Extract<UploadEvent, { type: "segment.completed" }>
+      | undefined)?.sections ?? 0;
+  const sectionsDone = events.filter(
+    (e) => e.type === "generate.section.completed",
+  ).length;
+
+  const errorEvent = events.find((e) => e.type === "error") as
+    | Extract<UploadEvent, { type: "error" }>
+    | undefined;
+  const doneEvent = events.find((e) => e.type === "generate.completed") as
+    | Extract<UploadEvent, { type: "generate.completed" }>
+    | undefined;
+
+  return (
+    <section className="rounded-[14px] border border-border bg-card p-5">
+      <div className="mb-4 flex items-center gap-2">
+        {errored ? (
+          <XCircle className="size-4 text-destructive" strokeWidth={1.8} />
+        ) : stage === "done" ? (
+          <CheckCircle2 className="size-4 text-primary" strokeWidth={1.8} />
+        ) : (
+          <Loader2 className="size-4 animate-spin text-primary" strokeWidth={1.8} />
+        )}
+        <h2 className="text-base font-medium text-foreground">
+          {errored ? "Generation failed" : "Generating questions"}
+        </h2>
+      </div>
+
+      {errored ? (
+        <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {errorEvent?.message ?? "The generation pipeline reported an error."}
+        </p>
+      ) : (
+        <ol className="space-y-2.5">
+          {STAGE_ORDER.filter((s) => s !== "done").map((s, i) => {
+            const reached = currentIdx >= i;
+            const active = currentIdx === i && stage !== "done";
+            const complete = currentIdx > i || stage === "done";
+            return (
+              <li key={s} className="flex items-center gap-3 text-sm">
+                <span className="flex size-5 shrink-0 items-center justify-center">
+                  {complete ? (
+                    <CheckCircle2
+                      className="size-4 text-primary"
+                      strokeWidth={1.8}
+                    />
+                  ) : active ? (
+                    <Loader2
+                      className="size-4 animate-spin text-primary"
+                      strokeWidth={1.8}
+                    />
+                  ) : (
+                    <span className="size-2 rounded-full bg-muted-foreground/30" />
+                  )}
+                </span>
+                <span
+                  className={cn(
+                    reached ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {STAGE_LABELS[s]}
+                  {s === "sections" && sectionsTotal > 0 && (
+                    <span className="ml-2 text-xs text-muted-foreground tabular-nums">
+                      {sectionsDone}/{sectionsTotal}
+                    </span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      {stage === "done" && doneEvent && !errored && (
+        <p className="mt-4 rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs text-foreground">
+          Inserted {doneEvent.inserted ?? doneEvent.kept ?? 0} questions
+          {typeof doneEvent.dropped === "number" && doneEvent.dropped > 0
+            ? ` · ${doneEvent.dropped} duplicates dropped`
+            : ""}
+          {typeof doneEvent.auto_rejected === "number" &&
+          doneEvent.auto_rejected > 0
+            ? ` · ${doneEvent.auto_rejected} below quality threshold`
+            : ""}
+          .
+        </p>
+      )}
+    </section>
   );
 }
 
