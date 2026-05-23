@@ -76,9 +76,11 @@ async def _async_run(question_set_id: str, settings: dict[str, Any]) -> dict:
 async def _mark_failed(question_set_id: str, message: str) -> None:
     from sqlalchemy import select
 
+    from app.ai import events as ai_events
     from app.core.database import AsyncSessionLocal
     from app.models.question import QuestionSet, QuestionSetStatus
 
+    upload_id = None
     async with AsyncSessionLocal() as db:
         async with db.begin():
             res = await db.execute(
@@ -89,3 +91,11 @@ async def _mark_failed(question_set_id: str, message: str) -> None:
                 return
             qs.status = QuestionSetStatus.generation_failed
             qs.generation_error = message[:2000]
+            upload_id = qs.upload_id
+
+    # Notify any SSE subscribers so the stream closes cleanly on failure.
+    if upload_id is not None:
+        await ai_events.safe_publish(
+            upload_id,
+            {"type": "error", "question_set_id": question_set_id, "message": message[:500]},
+        )
