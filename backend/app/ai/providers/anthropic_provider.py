@@ -1,3 +1,13 @@
+"""Anthropic provider.
+
+Phase 2: accepts an explicit `api_key`, `model`, and `system_prompt` so
+the factory can wire it from the DB-backed credential store, model
+registry, and prompt registry. All three fall back to env defaults
+when omitted, preserving the legacy single-key dev setup.
+"""
+
+from __future__ import annotations
+
 import json
 from typing import Literal
 
@@ -11,26 +21,36 @@ from app.core.config import settings
 class AnthropicProvider:
     name = "anthropic"
 
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        model: str | None = None,
+        system_prompt: str | None = None,
+    ) -> None:
+        self._api_key = api_key or settings.anthropic_api_key
+        self.model = model or settings.anthropic_model
+        self._system_prompt = system_prompt or EXTRACTION_SYSTEM_PROMPT
+
     async def extract_questions(
         self,
         chunks: list[str],
         source_type: Literal["study_material", "exam_paper"],
         target_count: int | None = None,
     ) -> ExtractionResult:
-        client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+        client = anthropic.AsyncAnthropic(api_key=self._api_key)
 
         user_content = "\n\n---\n\n".join(chunks)
         if target_count:
             user_content = f"Generate exactly {target_count} questions.\n\n{user_content}"
 
-        # System prompt cached — constant across all extraction calls.
         response = await client.beta.prompt_caching.messages.create(
-            model=settings.anthropic_model,
+            model=self.model,
             max_tokens=4096,
             system=[
                 {
                     "type": "text",
-                    "text": EXTRACTION_SYSTEM_PROMPT,
+                    "text": self._system_prompt,
                     "cache_control": {"type": "ephemeral"},
                 }
             ],
