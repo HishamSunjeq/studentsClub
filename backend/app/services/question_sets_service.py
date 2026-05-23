@@ -180,6 +180,46 @@ async def reject(
     return qs
 
 
+async def replay(
+    *,
+    db: AsyncSession,
+    qs_id: uuid.UUID,
+    user: User,
+    overrides: dict | None = None,
+) -> QuestionSet:
+    """Clone a QuestionSet and re-run generation against the same upload,
+    optionally overriding the profile / prompt version / model / credential.
+    The clone links back via `parent_question_set_id` for diffing and audit."""
+    parent = await _get_qs_or_404(db, qs_id)
+    if parent.created_by != user.id:
+        raise ForbiddenError("Not your question set")
+
+    overrides = {k: v for k, v in (overrides or {}).items() if v is not None}
+    # Inherit the original generation settings, layering any overrides on top.
+    settings_dict: dict = dict(parent.generation_settings or {})
+    settings_dict.update({str(k): str(v) for k, v in overrides.items()})
+
+    clone = QuestionSet(
+        upload_id=parent.upload_id,
+        subject_id=parent.subject_id,
+        created_by=user.id,
+        title=f"{parent.title} (replay)",
+        status=QuestionSetStatus.generating,
+        ai_model="",
+        tokens_used=0,
+        generation_settings=settings_dict,
+        parent_question_set_id=parent.id,
+    )
+    db.add(clone)
+    await db.flush()
+    await db.refresh(clone)
+
+    from app.workers.tasks.ai_pipeline import run as generate_task
+
+    generate_task.delay(str(clone.id), settings_dict)
+    return clone
+
+
 async def update_question(
     *,
     db: AsyncSession,
