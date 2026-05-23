@@ -250,6 +250,17 @@ async def generate_questions(
             detail="Upload has no extracted text; cannot generate.",
         )
 
+    # Phase 1 — enforce daily token budget per user before queueing.
+    from app.ai.budget import check_user_daily_budget
+
+    budget = await check_user_daily_budget(db, user.id)
+    if not budget.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=budget.reason
+            or "Daily token budget exhausted; please try again later.",
+        )
+
     settings_dict: dict[str, Any] = payload.model_dump()
 
     qs = QuestionSet(
@@ -265,7 +276,10 @@ async def generate_questions(
     db.add(qs)
     await db.flush()
 
-    from app.workers.tasks.extract_questions import run as generate_task
+    # Phase 4: route through the multi-stage orchestrator. The legacy
+    # `extract_questions.run` task remains as a thin compatibility shim
+    # that also calls into this same workflow.
+    from app.workers.tasks.ai_pipeline import run as generate_task
 
     generate_task.delay(str(qs.id), settings_dict)
 
