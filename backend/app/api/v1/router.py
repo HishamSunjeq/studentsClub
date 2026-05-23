@@ -10,6 +10,7 @@ from app.api.v1 import (
     search,
     subjects,
     uploads,
+    uploads_events,
     users,
 )
 from app.api.v1.admin import (
@@ -25,6 +26,7 @@ api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(subjects.router, prefix="/subjects", tags=["subjects"])
 api_router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
+api_router.include_router(uploads_events.router, prefix="/uploads", tags=["uploads"])
 api_router.include_router(question_sets.router, prefix="/question-sets", tags=["question-sets"])
 api_router.include_router(questions.router, prefix="/questions", tags=["questions"])
 api_router.include_router(quizzes.router, prefix="/quizzes", tags=["quizzes"])
