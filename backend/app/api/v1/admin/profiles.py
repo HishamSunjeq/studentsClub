@@ -25,7 +25,7 @@ from app.schemas.admin import (
 router = APIRouter()
 
 
-@router.get("", response_model=ProfileListResponse)
+@router.get("", response_model=ProfileListResponse, operation_id="admin_profiles_list")
 async def list_profiles(
     db: DBSession, _: AdminUser, subject_id: uuid.UUID | None = None
 ) -> ProfileListResponse:
@@ -39,7 +39,12 @@ async def list_profiles(
     return ProfileListResponse(items=[ProfileResponse.model_validate(r) for r in rows])
 
 
-@router.post("", response_model=ProfileResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ProfileResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="admin_profiles_create",
+)
 async def create_profile(
     db: DBSession, _: AdminUser, payload: ProfileCreateRequest
 ) -> ProfileResponse:
@@ -74,7 +79,11 @@ async def create_profile(
     return ProfileResponse.model_validate(row)
 
 
-@router.patch("/{profile_id}", response_model=ProfileResponse)
+@router.patch(
+    "/{profile_id}",
+    response_model=ProfileResponse,
+    operation_id="admin_profiles_update",
+)
 async def update_profile(
     db: DBSession,
     _: AdminUser,
@@ -101,7 +110,11 @@ async def update_profile(
     return ProfileResponse.model_validate(row)
 
 
-@router.delete("/{profile_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{profile_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admin_profiles_delete",
+)
 async def delete_profile(db: DBSession, _: AdminUser, profile_id: uuid.UUID) -> None:
     row = (
         await db.execute(

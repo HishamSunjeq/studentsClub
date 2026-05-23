@@ -24,7 +24,7 @@ from app.schemas.admin import (
 router = APIRouter()
 
 
-@router.get("", response_model=PromptListResponse)
+@router.get("", response_model=PromptListResponse, operation_id="admin_prompts_list")
 async def list_prompts(db: DBSession, _: AdminUser, name: str | None = None) -> PromptListResponse:
     q = select(AIPrompt).order_by(AIPrompt.name.asc(), desc(AIPrompt.version))
     if name:
@@ -33,7 +33,12 @@ async def list_prompts(db: DBSession, _: AdminUser, name: str | None = None) -> 
     return PromptListResponse(items=[PromptResponse.model_validate(r) for r in rows])
 
 
-@router.post("", response_model=PromptResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=PromptResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="admin_prompts_create",
+)
 async def create_prompt(
     db: DBSession, admin: AdminUser, payload: PromptCreateRequest
 ) -> PromptResponse:
@@ -67,7 +72,11 @@ async def create_prompt(
     return PromptResponse.model_validate(row)
 
 
-@router.post("/{prompt_id}/activate", response_model=PromptResponse)
+@router.post(
+    "/{prompt_id}/activate",
+    response_model=PromptResponse,
+    operation_id="admin_prompts_activate",
+)
 async def activate_prompt(
     db: DBSession, _: AdminUser, prompt_id: uuid.UUID
 ) -> PromptResponse:
@@ -83,7 +92,11 @@ async def activate_prompt(
     return PromptResponse.model_validate(row)
 
 
-@router.delete("/{prompt_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{prompt_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admin_prompts_delete",
+)
 async def delete_prompt(db: DBSession, _: AdminUser, prompt_id: uuid.UUID) -> None:
     row = (
         await db.execute(select(AIPrompt).where(AIPrompt.id == prompt_id))
