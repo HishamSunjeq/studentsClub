@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -24,6 +25,10 @@ class QuestionResponse(BaseModel):
     source_excerpt: str | None
     is_active: bool
     position: int
+    # RAG/quality signals (Phase 4) — let the review UI show grounding + scoring.
+    quality_score: Decimal | None = None
+    source_chunk_ids: list[UUID] = Field(default_factory=list)
+    auto_rejected: bool = False
     choices: list[QuestionChoiceResponse]
 
     model_config = {"from_attributes": True}

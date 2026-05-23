@@ -1,10 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ChevronLeft,
   CircleDot,
+  FileText,
+  GitCompare,
   Loader2,
   RotateCcw,
   Sparkles,
@@ -16,12 +19,14 @@ import {
   useQuestionSetsGet,
   useQuestionSetsPublish,
   useQuestionSetsReject,
+  useQuestionSetsReplay,
 } from "@/api/generated/endpoints/question-sets/question-sets";
 import {
   useQuestionsDeactivate,
   useQuestionsRegenerate,
   useQuestionsUpdate,
 } from "@/api/generated/endpoints/questions/questions";
+import { useChunksByIds } from "@/api/generated/endpoints/chunks/chunks";
 import type {
   QuestionDifficulty,
   QuestionResponse,
@@ -31,6 +36,35 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+// Color-coded against a nominal pass threshold; profiles default judge_threshold≈7.
+const QUALITY_PASS = 7;
+const QUALITY_WEAK = 5;
+
+function qualityTone(score: number): string {
+  if (score >= QUALITY_PASS)
+    return "border-[color:var(--success)]/30 bg-[color:var(--success)]/10 text-[color:var(--success)]";
+  if (score >= QUALITY_WEAK)
+    return "border-[color:var(--warning)]/30 bg-[color:var(--warning)]/10 text-[color:var(--warning)]";
+  return "border-destructive/30 bg-destructive/10 text-destructive";
+}
+
+function QualityBadge({ score }: { score?: string | null }) {
+  if (score == null) return null;
+  const n = Number(score);
+  if (Number.isNaN(n)) return null;
+  return (
+    <span
+      title="AI judge quality score (0–10)"
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[10px] font-semibold tabular-nums",
+        qualityTone(n),
+      )}
+    >
+      {n.toFixed(1)}
+    </span>
+  );
+}
 
 const DIFFICULTY_OPTIONS: { value: QuestionDifficulty; label: string }[] = [
   { value: "easy", label: "Easy" },
@@ -55,15 +89,20 @@ export default function ReviewPage() {
     query: { enabled: !!user && !!id },
   });
 
-  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
+  // When this set was produced by a replay, load the parent for side-by-side diff.
+  const parentId = qs?.parent_question_set_id ?? null;
+  const { data: parentQs } = useQuestionSetsGet(parentId ?? "", {
+    query: { enabled: !!parentId },
+  });
 
-  // Pick the first active question by default
-  useEffect(() => {
-    if (qs && !activeQuestionId) {
-      const first = qs.questions.find((q) => q.is_active) ?? qs.questions[0];
-      if (first) setActiveQuestionId(first.id);
-    }
-  }, [qs, activeQuestionId]);
+  const [activeQuestionId, setActiveQuestionId] = useState<string | null>(null);
+  const [showDiff, setShowDiff] = useState(false);
+
+  // Seed the default selection during render (no effect → no cascading render).
+  if (qs && activeQuestionId === null) {
+    const first = qs.questions.find((q) => q.is_active) ?? qs.questions[0];
+    if (first) setActiveQuestionId(first.id);
+  }
 
   function invalidate() {
     void queryClient.invalidateQueries({
@@ -93,6 +132,21 @@ export default function ReviewPage() {
         invalidate();
       },
       onError: () => toast.error("Failed to reject"),
+    },
+  });
+
+  const replayMutation = useQuestionSetsReplay({
+    mutation: {
+      onSuccess: (next) => {
+        toast.success("Replay started — generating a fresh version");
+        void queryClient.invalidateQueries({
+          queryKey: getQuestionSetsListMineQueryKey(),
+        });
+        navigate(`/drafts/${next.id}`);
+      },
+      onError: (err: { response?: { data?: { detail?: string } } }) => {
+        toast.error(err.response?.data?.detail ?? "Replay failed");
+      },
     },
   });
 
@@ -161,6 +215,31 @@ export default function ReviewPage() {
           <span className="text-xs text-muted-foreground">
             {activeCount} / {qs.questions.length} active
           </span>
+          {parentId && (
+            <Button
+              variant={showDiff ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDiff((v) => !v)}
+            >
+              <GitCompare className="size-3.5" strokeWidth={1.5} />
+              {showDiff ? "Hide diff" : "Compare to parent"}
+            </Button>
+          )}
+          {!isDraft && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => replayMutation.mutate({ qsId: id!, data: {} })}
+              disabled={replayMutation.isPending}
+            >
+              {replayMutation.isPending ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <RotateCcw className="size-3.5" strokeWidth={1.5} />
+              )}
+              Replay
+            </Button>
+          )}
         </div>
       </div>
 
@@ -191,15 +270,29 @@ export default function ReviewPage() {
                   >
                     {i + 1}
                   </span>
-                  <span
-                    className={cn(
-                      "line-clamp-2 flex-1 text-xs",
-                      activeQuestionId === q.id
-                        ? "text-foreground"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {q.text || "(empty)"}
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span
+                      className={cn(
+                        "line-clamp-2 text-xs",
+                        activeQuestionId === q.id
+                          ? "text-foreground"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {q.text || "(empty)"}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <QualityBadge score={q.quality_score} />
+                      {(q.source_chunk_ids?.length ?? 0) === 0 && (
+                        <span
+                          title="No source citations — ungrounded question"
+                          className="flex items-center gap-0.5 rounded-full border border-destructive/30 bg-destructive/10 px-1.5 py-0.5 text-[9px] font-medium text-destructive"
+                        >
+                          <AlertTriangle className="size-2.5" strokeWidth={2} />
+                          ungrounded
+                        </span>
+                      )}
+                    </span>
                   </span>
                 </button>
               </li>
@@ -217,6 +310,15 @@ export default function ReviewPage() {
               questionNumber={
                 qs.questions.findIndex((q) => q.id === activeQuestion.id) + 1
               }
+              previousVersion={
+                showDiff && parentQs
+                  ? (parentQs.questions[
+                      qs.questions.findIndex(
+                        (q) => q.id === activeQuestion.id,
+                      )
+                    ] ?? null)
+                  : null
+              }
               onSaved={invalidate}
             />
           ) : (
@@ -226,24 +328,15 @@ export default function ReviewPage() {
           )}
         </section>
 
-        {/* Right rail — source excerpt */}
+        {/* Right rail — grounded sources */}
         <aside className="hidden w-80 shrink-0 overflow-y-auto border-l border-border bg-card xl:block">
-          <div className="sticky top-0 border-b border-border bg-card px-5 py-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Source context
-            </p>
-          </div>
-          <div className="p-5">
-            {activeQuestion?.source_excerpt ? (
-              <p className="font-study text-sm text-muted-foreground">
-                {activeQuestion.source_excerpt}
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                No source excerpt available for this question.
-              </p>
-            )}
-          </div>
+          {activeQuestion ? (
+            <SourcesPanel question={activeQuestion} />
+          ) : (
+            <div className="p-5 text-xs text-muted-foreground">
+              Select a question to view its sources.
+            </div>
+          )}
         </aside>
       </div>
 
@@ -279,11 +372,13 @@ function QuestionEditor({
   question,
   isDraft,
   questionNumber,
+  previousVersion,
   onSaved,
 }: {
   question: QuestionResponse;
   isDraft: boolean;
   questionNumber: number;
+  previousVersion: QuestionResponse | null;
   onSaved: () => void;
 }) {
   // Local editor state — mutations flush to server.
@@ -372,6 +467,16 @@ function QuestionEditor({
             <Sparkles className="size-3" />
             AI Draft
           </span>
+          <QualityBadge score={question.quality_score} />
+          {(question.source_chunk_ids?.length ?? 0) === 0 && (
+            <span
+              title="No source citations — this question was not grounded in retrieved material"
+              className="flex items-center gap-1 rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1 text-[10px] font-medium text-destructive"
+            >
+              <AlertTriangle className="size-3" strokeWidth={2} />
+              Ungrounded
+            </span>
+          )}
         </div>
         {isDraft && question.is_active && (
           <div className="flex items-center gap-2">
@@ -401,6 +506,25 @@ function QuestionEditor({
           </div>
         )}
       </div>
+
+      {/* Parent diff — previous version at this position */}
+      {previousVersion && (
+        <div className="space-y-2 rounded-lg border border-border bg-muted/30 p-4">
+          <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+            <GitCompare className="size-3" />
+            Previous version
+          </p>
+          {previousVersion.text === question.text ? (
+            <p className="text-xs text-muted-foreground">
+              Unchanged from the parent set.
+            </p>
+          ) : (
+            <p className="font-study text-sm text-muted-foreground line-through decoration-destructive/40">
+              {previousVersion.text}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Question stem */}
       <div className="space-y-2">
@@ -541,5 +665,77 @@ function QuestionEditor({
         </div>
       )}
     </div>
+  );
+}
+
+function SourcesPanel({ question }: { question: QuestionResponse }) {
+  const ids = question.source_chunk_ids ?? [];
+  const hasCitations = ids.length > 0;
+
+  const { data, isLoading } = useChunksByIds(
+    { ids: ids.join(",") },
+    { query: { enabled: hasCitations } },
+  );
+
+  const chunks = data?.items ?? [];
+
+  return (
+    <>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-5 py-3">
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          Grounded sources
+        </p>
+        {hasCitations && (
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium tabular-nums text-muted-foreground">
+            {ids.length}
+          </span>
+        )}
+      </div>
+      <div className="space-y-4 p-5">
+        {!hasCitations ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+              <AlertTriangle className="size-3.5" strokeWidth={2} />
+              No citations
+            </div>
+            {question.source_excerpt ? (
+              <p className="font-study text-sm text-muted-foreground">
+                {question.source_excerpt}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                This question was not grounded in any retrieved chunk. Treat its
+                accuracy with extra scrutiny before publishing.
+              </p>
+            )}
+          </div>
+        ) : isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full rounded-lg" />
+            <Skeleton className="h-24 w-full rounded-lg" />
+          </div>
+        ) : chunks.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            Cited chunks are no longer available (the source upload may have been
+            removed).
+          </p>
+        ) : (
+          chunks.map((c) => (
+            <div
+              key={c.id}
+              className="rounded-lg border border-border bg-background p-3"
+            >
+              <div className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <FileText className="size-3" />
+                {c.section_title || `Chunk #${c.position + 1}`}
+              </div>
+              <p className="font-study text-xs leading-relaxed text-muted-foreground">
+                {c.text}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+    </>
   );
 }
