@@ -115,6 +115,22 @@ async def publish(
     await db.flush()
     await db.refresh(qs)
 
+    # Phase 4: upsert accepted questions into Qdrant `questions` collection so
+    # they participate in dedup for future generations within the same subject.
+    try:
+        from app.ai.orchestrator.publish_hook import upsert_accepted_questions
+
+        await upsert_accepted_questions(
+            db, question_set_id=qs.id, subject_id=qs.subject_id, published=True
+        )
+    except Exception:
+        # Best-effort: a Qdrant outage must not block publish.
+        import logging
+
+        logging.getLogger(__name__).exception(
+            "publish: Qdrant upsert failed for qs=%s", qs.id
+        )
+
     # Fan out notifications to enrolled subject members (other than the author).
     if qs.subject_id is not None:
         subject = await db.get(Subject, qs.subject_id)
@@ -143,6 +159,24 @@ async def reject(
     qs.status = QuestionSetStatus.rejected
     await db.flush()
     await db.refresh(qs)
+
+    # Phase 4: remove any previously-indexed questions from the Qdrant bank.
+    try:
+        from app.ai.orchestrator.publish_hook import remove_questions_from_bank
+
+        q_ids = list(
+            await db.scalars(
+                select(Question.id).where(Question.question_set_id == qs.id)
+            )
+        )
+        if q_ids:
+            await remove_questions_from_bank(db, question_ids=q_ids)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception(
+            "reject: Qdrant cleanup failed for qs=%s", qs.id
+        )
     return qs
 
 
