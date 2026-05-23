@@ -52,7 +52,7 @@ def _apply_filters(
     return q
 
 
-@router.get("", response_model=AIRunListResponse)
+@router.get("", response_model=AIRunListResponse, operation_id="admin_ai_runs_list")
 async def list_ai_runs(
     db: DBSession,
     _: AdminUser,
@@ -103,7 +103,11 @@ async def list_ai_runs(
     )
 
 
-@router.get("/{run_id}", response_model=AIRunDetailResponse)
+@router.get(
+    "/{run_id}",
+    response_model=AIRunDetailResponse,
+    operation_id="admin_ai_runs_get",
+)
 async def get_ai_run(
     db: DBSession, _: AdminUser, run_id: uuid.UUID
 ) -> AIRunDetailResponse:

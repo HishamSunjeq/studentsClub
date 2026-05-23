@@ -20,7 +20,7 @@ from app.schemas.admin import (
 router = APIRouter()
 
 
-@router.get("", response_model=ModelListResponse)
+@router.get("", response_model=ModelListResponse, operation_id="admin_models_list")
 async def list_models(
     db: DBSession, _: AdminUser, kind: str | None = None, provider: str | None = None
 ) -> ModelListResponse:
@@ -33,7 +33,12 @@ async def list_models(
     return ModelListResponse(items=[ModelResponse.model_validate(r) for r in rows])
 
 
-@router.post("", response_model=ModelResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ModelResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="admin_models_create",
+)
 async def create_model(
     db: DBSession, _: AdminUser, payload: ModelCreateRequest
 ) -> ModelResponse:
@@ -71,7 +76,11 @@ async def create_model(
     return ModelResponse.model_validate(row)
 
 
-@router.patch("/{model_id}", response_model=ModelResponse)
+@router.patch(
+    "/{model_id}",
+    response_model=ModelResponse,
+    operation_id="admin_models_update",
+)
 async def update_model(
     db: DBSession,
     _: AdminUser,
@@ -101,7 +110,11 @@ async def update_model(
     return ModelResponse.model_validate(row)
 
 
-@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{model_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admin_models_delete",
+)
 async def delete_model(db: DBSession, _: AdminUser, model_id: uuid.UUID) -> None:
     row = (
         await db.execute(select(AIModel).where(AIModel.id == model_id))

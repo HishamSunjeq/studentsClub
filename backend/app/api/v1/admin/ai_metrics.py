@@ -38,7 +38,7 @@ async def _breakdown(db, column, since) -> list[MetricsBreakdownRow]:
     ]
 
 
-@router.get("", response_model=AIMetricsResponse)
+@router.get("", response_model=AIMetricsResponse, operation_id="admin_ai_metrics_get")
 async def ai_metrics(
     db: DBSession,
     _: AdminUser,

@@ -32,7 +32,7 @@ from app.schemas.admin import (
 router = APIRouter()
 
 
-@router.get("", response_model=CredentialListResponse)
+@router.get("", response_model=CredentialListResponse, operation_id="admin_credentials_list")
 async def list_credentials(
     db: DBSession, _: AdminUser, provider: str | None = None
 ) -> CredentialListResponse:
@@ -45,7 +45,12 @@ async def list_credentials(
     )
 
 
-@router.post("", response_model=CredentialResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=CredentialResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="admin_credentials_create",
+)
 async def create_credential(
     db: DBSession, admin: AdminUser, payload: CredentialCreateRequest
 ) -> CredentialResponse:
@@ -74,7 +79,11 @@ async def create_credential(
     return CredentialResponse.model_validate(row)
 
 
-@router.patch("/{credential_id}", response_model=CredentialResponse)
+@router.patch(
+    "/{credential_id}",
+    response_model=CredentialResponse,
+    operation_id="admin_credentials_update",
+)
 async def update_credential(
     db: DBSession,
     _: AdminUser,
@@ -92,7 +101,11 @@ async def update_credential(
     return CredentialResponse.model_validate(row)
 
 
-@router.post("/{credential_id}/rotate", response_model=CredentialResponse)
+@router.post(
+    "/{credential_id}/rotate",
+    response_model=CredentialResponse,
+    operation_id="admin_credentials_rotate",
+)
 async def rotate_credential(
     db: DBSession,
     _: AdminUser,
@@ -110,7 +123,11 @@ async def rotate_credential(
     return CredentialResponse.model_validate(row)
 
 
-@router.delete("/{credential_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{credential_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admin_credentials_delete",
+)
 async def delete_credential(
     db: DBSession, _: AdminUser, credential_id: uuid.UUID
 ) -> None:
@@ -118,7 +135,11 @@ async def delete_credential(
     await db.delete(row)
 
 
-@router.post("/{credential_id}/test", response_model=CredentialTestResponse)
+@router.post(
+    "/{credential_id}/test",
+    response_model=CredentialTestResponse,
+    operation_id="admin_credentials_test",
+)
 async def test_credential(
     db: DBSession, _: AdminUser, credential_id: uuid.UUID
 ) -> CredentialTestResponse:
