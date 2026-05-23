@@ -12,6 +12,12 @@ from app.api.v1 import (
     uploads,
     users,
 )
+from app.api.v1.admin import (
+    credentials as admin_credentials,
+    models as admin_models,
+    profiles as admin_profiles,
+    prompts as admin_prompts,
+)
 
 api_router = APIRouter()
 
@@ -30,3 +36,9 @@ api_router.include_router(
 api_router.include_router(
     notifications.settings_router, prefix="/users/me/settings", tags=["settings"]
 )
+
+# Admin control plane (Phase 2). All routes are gated by `require_admin`.
+api_router.include_router(admin_prompts.router,      prefix="/admin/prompts",     tags=["admin"])
+api_router.include_router(admin_credentials.router,  prefix="/admin/credentials", tags=["admin"])
+api_router.include_router(admin_models.router,       prefix="/admin/models",      tags=["admin"])
+api_router.include_router(admin_profiles.router,     prefix="/admin/profiles",    tags=["admin"])

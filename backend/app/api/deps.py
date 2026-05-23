@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.exceptions import UnauthorizedError
 from app.core.security import decode_token
-from app.models.user import User
+from app.models.user import User, UserRole
 
 DBSession = Annotated[AsyncSession, Depends(get_db)]
 
@@ -43,3 +43,17 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+async def require_admin(user: CurrentUser) -> User:
+    """Gate admin-only endpoints (Phase 2). 403 if the caller is not an admin."""
+    from fastapi import HTTPException, status
+
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
+    return user
+
+
+AdminUser = Annotated[User, Depends(require_admin)]
