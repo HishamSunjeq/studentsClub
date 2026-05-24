@@ -1,30 +1,50 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0009-4000-8000-000000000009",
+    "_postman_id": "a1b2c3d4-3439-4000-8000-000000000000",
     "name": "Feed",
-    "description": "Activity feed of recently-published question sets in the user's enrolled subjects.",
+    "description": "Cross-subject feed of recent activity.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Get Activity Feed",
+      "name": "Get Feed",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/feed?page=1&size=20",
-          "host": ["{{base_url}}"],
-          "path": ["feed"],
+          "raw": "{{base_url}}/feed",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "feed"
+          ],
           "query": [
-            { "key": "page", "value": "1" },
-            { "key": "size", "value": "20", "description": "Max 100" }
+            {
+              "key": "page",
+              "value": "1",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "size",
+              "value": "20",
+              "description": "",
+              "disabled": true
+            }
           ]
         },
-        "description": "Recent published question sets in subjects the authenticated user is enrolled in. Excludes the user's own publications so the feed feels social. Drives the dashboard \"Activity in your subjects\" tile.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `FeedListResponse` (200) — each item: `question_set_id`, `title`, `subject_id`, `subject_name`, `subject_code`, `author_id`, `author_name`, `question_count`, `published_at`."
+        "description": "**Get Feed**\n\n`operationId`: `feed_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `FeedListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     }

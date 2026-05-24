@@ -1,131 +1,268 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0006-4000-8000-000000000006",
-    "name": "Question Sets",
-    "description": "Question set management — list, retrieve, update, publish, or reject AI-generated question sets.",
+    "_postman_id": "a1b2c3d4-5864-4000-8000-000000000000",
+    "name": "Question_Sets",
+    "description": "Draft review, publish/reject, replay against a different prompt/model/profile.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "List My Question Sets",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/question-sets/me?page=1&size=20",
-          "host": ["{{base_url}}"],
-          "path": ["question-sets", "me"],
+          "raw": "{{base_url}}/question-sets/me",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            "me"
+          ],
           "query": [
             {
               "key": "status",
-              "value": "",
-              "disabled": true,
-              "description": "Filter by status: draft | published | rejected"
+              "value": "generating",
+              "description": "",
+              "disabled": true
             },
-            { "key": "page", "value": "1" },
-            { "key": "size", "value": "20", "description": "Max 100" }
+            {
+              "key": "page",
+              "value": "1",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "size",
+              "value": "20",
+              "description": "",
+              "disabled": true
+            }
           ]
         },
-        "description": "List all question sets owned by the authenticated user.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `status` *(optional)* — `draft` | `published` | `rejected`\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `QuestionSetListResponse` (200)"
+        "description": "**List My Question Sets**\n\n`operationId`: `question_sets_list_mine`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuestionSetListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
-      "name": "Get Question Set (with Questions)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "if (json.id) {",
-              "  pm.environment.set('question_set_id', json.id);",
-              "}",
-              "if (json.questions && json.questions.length > 0) {",
-              "  pm.environment.set('question_id', json.questions[0].id);",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "Get Question Set",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/question-sets/{{question_set_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["question-sets", "{{question_set_id}}"]
+          "raw": "{{base_url}}/question-sets/:qs_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            ":qs_id"
+          ],
+          "variable": [
+            {
+              "key": "qs_id",
+              "value": "{{question_set_id}}",
+              "description": "Path variable :qs_id"
+            }
+          ]
         },
-        "description": "Retrieve a question set and all its questions (with choices, correct answers, and `source_excerpt`).\n\n**Requires:** Bearer token (must be the owner)\n\n**Path params:**\n- `question_set_id` — UUID\n\n**Returns:** `QuestionSetWithQuestionsResponse` (200)"
+        "description": "**Get Question Set**\n\n`operationId`: `question_sets_get`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuestionSetWithQuestionsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
-      "name": "Update Question Set Title",
+      "name": "Update Question Set",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "PATCH",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{base_url}}/question-sets/:qs_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            ":qs_id"
+          ],
+          "variable": [
+            {
+              "key": "qs_id",
+              "value": "{{question_set_id}}",
+              "description": "Path variable :qs_id"
+            }
+          ]
+        },
+        "description": "**Update Question Set**\n\n`operationId`: `question_sets_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `title`\n\n**Body schema:** `QuestionSetUpdateRequest`\n\n**Response schema:** `QuestionSetResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"Updated Question Set Title\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/question-sets/{{question_set_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["question-sets", "{{question_set_id}}"]
-        },
-        "description": "Update the title of a question set. Set must still be in `draft` status.\n\n**Requires:** Bearer token (must own the set)\n\n**Path params:**\n- `question_set_id` — UUID\n\n**Body fields:**\n- `title` — 1–500 characters\n\n**Returns:** `QuestionSetResponse` (200)"
+          "raw": "{\n  \"title\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
       "name": "Publish Question Set",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/question-sets/{{question_set_id}}/publish",
-          "host": ["{{base_url}}"],
-          "path": ["question-sets", "{{question_set_id}}", "publish"]
+          "raw": "{{base_url}}/question-sets/:qs_id/publish",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            ":qs_id",
+            "publish"
+          ],
+          "variable": [
+            {
+              "key": "qs_id",
+              "value": "{{question_set_id}}",
+              "description": "Path variable :qs_id"
+            }
+          ]
         },
-        "description": "Publish a draft question set so it appears in the subject's shared question bank. Triggers fan-out notifications to enrolled members.\n\n**Requires:** Bearer token (must own the set, must have ≥1 active question, must be in `draft` status).\n\n**Path params:**\n- `question_set_id` — UUID\n\n**Returns:** `QuestionSetResponse` (200) with `status: published`."
+        "description": "**Publish Question Set**\n\n`operationId`: `question_sets_publish`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuestionSetResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
       "name": "Reject Question Set",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/question-sets/{{question_set_id}}/reject",
-          "host": ["{{base_url}}"],
-          "path": ["question-sets", "{{question_set_id}}", "reject"]
+          "raw": "{{base_url}}/question-sets/:qs_id/reject",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            ":qs_id",
+            "reject"
+          ],
+          "variable": [
+            {
+              "key": "qs_id",
+              "value": "{{question_set_id}}",
+              "description": "Path variable :qs_id"
+            }
+          ]
         },
-        "description": "Reject a draft question set so it never enters the question bank. Set must still be in `draft` status.\n\n**Requires:** Bearer token (must own the set)\n\n**Path params:**\n- `question_set_id` — UUID\n\n**Returns:** `QuestionSetResponse` (200) with `status: rejected`."
+        "description": "**Reject Question Set**\n\n`operationId`: `question_sets_reject`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuestionSetResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Replay Question Set",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/question-sets/:qs_id/replay",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "question-sets",
+            ":qs_id",
+            "replay"
+          ],
+          "variable": [
+            {
+              "key": "qs_id",
+              "value": "{{question_set_id}}",
+              "description": "Path variable :qs_id"
+            }
+          ]
+        },
+        "description": "**Replay Question Set**\n\n`operationId`: `question_sets_replay`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `QuestionSetReplayRequest`\n\n**Response schema:** `QuestionSetResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"profile_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"prompt_version_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"credential_alias\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     }

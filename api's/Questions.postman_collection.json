@@ -1,68 +1,182 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0007-4000-8000-000000000007",
+    "_postman_id": "a1b2c3d4-7543-4000-8000-000000000000",
     "name": "Questions",
-    "description": "Individual question management — update content, regenerate via AI, or deactivate a question.",
+    "description": "Per-question edit, deactivate, regenerate with RAG context, retrieval preview.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Update Question",
+      "name": "Deactivate Question",
       "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/questions/:question_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "questions",
+            ":question_id"
+          ],
+          "variable": [
+            {
+              "key": "question_id",
+              "value": "{{question_id}}",
+              "description": "Path variable :question_id"
+            }
+          ]
+        },
+        "description": "**Deactivate Question**\n\n`operationId`: `questions_deactivate`\n\n**Requires:** Bearer token (`access_token`).",
         "auth": {
           "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Question",
+      "request": {
         "method": "PATCH",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{base_url}}/questions/:question_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "questions",
+            ":question_id"
+          ],
+          "variable": [
+            {
+              "key": "question_id",
+              "value": "{{question_id}}",
+              "description": "Path variable :question_id"
+            }
+          ]
+        },
+        "description": "**Update Question**\n\n`operationId`: `questions_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `QuestionUpdateRequest`\n\n**Response schema:** `QuestionResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"text\": \"What is the capital of France?\",\n  \"explanation\": \"Paris has been the capital since the 10th century.\",\n  \"difficulty\": \"easy\",\n  \"choices\": [\n    { \"text\": \"Paris\", \"is_correct\": true },\n    { \"text\": \"Lyon\", \"is_correct\": false },\n    { \"text\": \"Marseille\", \"is_correct\": false },\n    { \"text\": \"Toulouse\", \"is_correct\": false }\n  ]\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/questions/{{question_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["questions", "{{question_id}}"]
-        },
-        "description": "Update a question's text, explanation, difficulty, and/or choices. Parent set must still be in `draft` status.\n\n**Requires:** Bearer token (must own the parent question set)\n\n**Path params:**\n- `question_id` — UUID\n\n**Body fields (all optional):**\n- `text` — question text\n- `explanation` — explanation shown after answering\n- `difficulty` — `easy` | `medium` | `hard`\n- `choices` — exactly 4 choices, exactly 1 must have `is_correct: true`\n\n**Returns:** `QuestionResponse` (200)"
+          "raw": "{\n  \"text\": \"\",\n  \"explanation\": \"\",\n  \"difficulty\": \"easy\",\n  \"choices\": [\n    {\n      \"text\": \"\",\n      \"is_correct\": false\n    }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
       "name": "Regenerate Question",
       "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/questions/:question_id/regenerate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "questions",
+            ":question_id",
+            "regenerate"
+          ],
+          "variable": [
+            {
+              "key": "question_id",
+              "value": "{{question_id}}",
+              "description": "Path variable :question_id"
+            }
+          ]
+        },
+        "description": "**Regenerate Question**\n\n`operationId`: `questions_regenerate`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuestionResponse`",
         "auth": {
           "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
         },
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/questions/{{question_id}}/regenerate",
-          "host": ["{{base_url}}"],
-          "path": ["questions", "{{question_id}}", "regenerate"]
-        },
-        "description": "Re-run the AI provider on this question's `source_excerpt` (or current text) and replace text/explanation/difficulty/choices in place. Synchronous call.\n\n**Requires:** Bearer token (must own the parent question set, must be in `draft` status, question must have a non-empty source).\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** `QuestionResponse` (200) — fresh AI-drafted content."
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chunk_ids\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
-      "name": "Deactivate Question",
+      "name": "Retrieval Preview",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
-        "method": "DELETE",
+        "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/questions/{{question_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["questions", "{{question_id}}"]
+          "raw": "{{base_url}}/questions/:question_id/retrieval-preview",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "questions",
+            ":question_id",
+            "retrieval-preview"
+          ],
+          "variable": [
+            {
+              "key": "question_id",
+              "value": "{{question_id}}",
+              "description": "Path variable :question_id"
+            }
+          ]
         },
-        "description": "Soft-delete (deactivate) a question so it no longer appears in quizzes.\n\n**Requires:** Bearer token (must own the parent question set, set must be in `draft` status)\n\n**Path params:**\n- `question_id` — UUID\n\n**Returns:** 204 No Content"
+        "description": "**Retrieval Preview**\n\n`operationId`: `questions_retrieval_preview`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `RetrievalPreviewResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     }

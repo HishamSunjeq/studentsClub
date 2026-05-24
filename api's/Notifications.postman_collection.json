@@ -1,81 +1,122 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0011-4000-8000-000000000011",
+    "_postman_id": "a1b2c3d4-5383-4000-8000-000000000000",
     "name": "Notifications",
-    "description": "In-app notifications inbox — list, mark individual or all-as-read. Backs the bell drawer in the top bar.",
+    "description": "Notification inbox — list, mark read, mark all read.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "List Notifications",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "if (json.items && json.items.length > 0) {",
-              "  pm.environment.set('notification_id', json.items[0].id);",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/notifications?page=1&size=20&unread_only=false",
-          "host": ["{{base_url}}"],
-          "path": ["notifications"],
+          "raw": "{{base_url}}/notifications",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "notifications"
+          ],
           "query": [
-            { "key": "page", "value": "1" },
-            { "key": "size", "value": "20", "description": "Max 100" },
-            { "key": "unread_only", "value": "false", "description": "true = only unread; useful for the bell badge count" }
+            {
+              "key": "page",
+              "value": "1",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "size",
+              "value": "20",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "unread_only",
+              "value": "False",
+              "description": "",
+              "disabled": true
+            }
           ]
         },
-        "description": "List the authenticated user's notifications, newest-first.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `page` — default 1\n- `size` — default 20, max 100\n- `unread_only` — when `true`, only returns unread items. The shell bell uses `size=1&unread_only=true` to drive the badge count.\n\n**Returns:** `NotificationListResponse` (200) — `items[]`, `total`, `unread_count`, `page`, `size`, `pages`. Each item: `id`, `type` (`draft_ready` | `question_set_published` | `question_set_voted` | `new_material_in_subject`), `title`, `body`, `payload` (free-form click-through metadata), `read_at` (nullable), `created_at`."
+        "description": "**List Notifications**\n\n`operationId`: `notifications_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `NotificationListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
-      "name": "Mark Notification Read",
+      "name": "Mark All Read",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/notifications/{{notification_id}}/read",
-          "host": ["{{base_url}}"],
-          "path": ["notifications", "{{notification_id}}", "read"]
-        },
-        "description": "Mark a single notification as read. Idempotent — calling twice is a no-op the second time.\n\n**Requires:** Bearer token (must own the notification)\n\n**Path params:**\n- `notification_id` — UUID\n\n**Returns:** `NotificationResponse` (200) with `read_at` populated."
-      },
-      "response": []
-    },
-    {
-      "name": "Mark All Notifications Read",
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [],
         "url": {
           "raw": "{{base_url}}/notifications/read-all",
-          "host": ["{{base_url}}"],
-          "path": ["notifications", "read-all"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "notifications",
+            "read-all"
+          ]
         },
-        "description": "Bulk-mark every unread notification for the authenticated user as read.\n\n**Requires:** Bearer token\n\n**Returns:** `{ \"marked_read\": <count> }` (200)"
+        "description": "**Mark All Read**\n\n`operationId`: `notifications_mark_all_read`\n\n**Requires:** Bearer token (`access_token`).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Mark Read",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/notifications/:notification_id/read",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "notifications",
+            ":notification_id",
+            "read"
+          ],
+          "variable": [
+            {
+              "key": "notification_id",
+              "value": "{{notification_id}}",
+              "description": "Path variable :notification_id"
+            }
+          ]
+        },
+        "description": "**Mark Read**\n\n`operationId`: `notifications_mark_read`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `NotificationResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     }

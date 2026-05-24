@@ -1,0 +1,999 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-2468-4000-8000-000000000000",
+    "name": "Admin",
+    "description": "Admin control plane — prompts, credentials, models, profiles, extraction settings, AI runs telemetry.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Ai Metrics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/ai/metrics",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "ai",
+            "metrics"
+          ],
+          "query": [
+            {
+              "key": "range",
+              "value": "30",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**Ai Metrics**\n\n`operationId`: `admin_ai_metrics_get`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `AIMetricsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Ai Runs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/ai/runs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "ai",
+            "runs"
+          ],
+          "query": [
+            {
+              "key": "question_set_id",
+              "value": "00000000-0000-0000-0000-000000000000",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "provider",
+              "value": "",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "model",
+              "value": "",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "credential_alias",
+              "value": "",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "status",
+              "value": "",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "since",
+              "value": "2026-01-01T00:00:00Z",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "until",
+              "value": "2026-01-01T00:00:00Z",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "page",
+              "value": "1",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "size",
+              "value": "50",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**List Ai Runs**\n\n`operationId`: `admin_ai_runs_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `AIRunListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Ai Run",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/ai/runs/:run_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "ai",
+            "runs",
+            ":run_id"
+          ],
+          "variable": [
+            {
+              "key": "run_id",
+              "value": "{{run_id}}",
+              "description": "Path variable :run_id"
+            }
+          ]
+        },
+        "description": "**Get Ai Run**\n\n`operationId`: `admin_ai_runs_get`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `AIRunDetailResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Credentials",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials"
+          ],
+          "query": [
+            {
+              "key": "provider",
+              "value": "",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**List Credentials**\n\n`operationId`: `admin_credentials_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `CredentialListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Credential",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials"
+          ]
+        },
+        "description": "**Create Credential**\n\n`operationId`: `admin_credentials_create`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `alias`, `provider`, `api_key`\n\n**Body schema:** `CredentialCreateRequest`\n\n**Response schema:** `CredentialResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"alias\": \"\",\n  \"provider\": \"anthropic\",\n  \"api_key\": \"\",\n  \"display_name\": \"\",\n  \"monthly_budget_usd\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Credential",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials/:credential_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials",
+            ":credential_id"
+          ],
+          "variable": [
+            {
+              "key": "credential_id",
+              "value": "{{credential_id}}",
+              "description": "Path variable :credential_id"
+            }
+          ]
+        },
+        "description": "**Delete Credential**\n\n`operationId`: `admin_credentials_delete`\n\n**Requires:** Bearer token (`access_token`).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Credential",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials/:credential_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials",
+            ":credential_id"
+          ],
+          "variable": [
+            {
+              "key": "credential_id",
+              "value": "{{credential_id}}",
+              "description": "Path variable :credential_id"
+            }
+          ]
+        },
+        "description": "**Update Credential**\n\n`operationId`: `admin_credentials_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `CredentialUpdateRequest`\n\n**Response schema:** `CredentialResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"\",\n  \"monthly_budget_usd\": 0,\n  \"is_active\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Rotate Credential",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials/:credential_id/rotate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials",
+            ":credential_id",
+            "rotate"
+          ],
+          "variable": [
+            {
+              "key": "credential_id",
+              "value": "{{credential_id}}",
+              "description": "Path variable :credential_id"
+            }
+          ]
+        },
+        "description": "**Rotate Credential**\n\n`operationId`: `admin_credentials_rotate`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `api_key`\n\n**Body schema:** `CredentialRotateRequest`\n\n**Response schema:** `CredentialResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"api_key\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Test Credential",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/credentials/:credential_id/test",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "credentials",
+            ":credential_id",
+            "test"
+          ],
+          "variable": [
+            {
+              "key": "credential_id",
+              "value": "{{credential_id}}",
+              "description": "Path variable :credential_id"
+            }
+          ]
+        },
+        "description": "**Test Credential**\n\nDry-run the credential against its provider with a 1-token call.\nNever returns the plaintext key in errors.\n\n`operationId`: `admin_credentials_test`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `CredentialTestResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Extraction Settings",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/extraction",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "extraction"
+          ]
+        },
+        "description": "**Get Extraction Settings**\n\n`operationId`: `admin_extraction_get`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ExtractionSettingsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Extraction Settings",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/extraction",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "extraction"
+          ]
+        },
+        "description": "**Update Extraction Settings**\n\n`operationId`: `admin_extraction_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `ExtractionSettingsUpdateRequest`\n\n**Response schema:** `ExtractionSettingsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"backend\": \"unstructured\",\n  \"strategy\": \"auto\",\n  \"ocr_languages\": [\n    \"\"\n  ],\n  \"extract_tables\": false,\n  \"hi_res_model_name\": \"\",\n  \"max_characters\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Models",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/models",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "models"
+          ],
+          "query": [
+            {
+              "key": "kind",
+              "value": "",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "provider",
+              "value": "",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**List Models**\n\n`operationId`: `admin_models_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ModelListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Model",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/models",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "models"
+          ]
+        },
+        "description": "**Create Model**\n\n`operationId`: `admin_models_create`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `provider`, `model_id`, `display_name`, `kind`\n\n**Body schema:** `ModelCreateRequest`\n\n**Response schema:** `ModelResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"provider\": \"\",\n  \"model_id\": \"\",\n  \"display_name\": \"\",\n  \"kind\": \"extraction\",\n  \"context_window\": 0,\n  \"max_output_tokens\": 0,\n  \"input_cost_per_mtoken\": \"0\",\n  \"output_cost_per_mtoken\": \"0\",\n  \"supports_streaming\": false,\n  \"supports_json_mode\": false,\n  \"supports_prompt_cache\": false,\n  \"embedding_dim\": 0,\n  \"sort_order\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Model",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/models/:model_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "models",
+            ":model_id"
+          ],
+          "variable": [
+            {
+              "key": "model_id",
+              "value": "{{model_id}}",
+              "description": "Path variable :model_id"
+            }
+          ]
+        },
+        "description": "**Delete Model**\n\n`operationId`: `admin_models_delete`\n\n**Requires:** Bearer token (`access_token`).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Model",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/models/:model_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "models",
+            ":model_id"
+          ],
+          "variable": [
+            {
+              "key": "model_id",
+              "value": "{{model_id}}",
+              "description": "Path variable :model_id"
+            }
+          ]
+        },
+        "description": "**Update Model**\n\n`operationId`: `admin_models_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `ModelUpdateRequest`\n\n**Response schema:** `ModelResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"display_name\": \"\",\n  \"input_cost_per_mtoken\": 0,\n  \"output_cost_per_mtoken\": 0,\n  \"context_window\": 0,\n  \"max_output_tokens\": 0,\n  \"is_active\": false,\n  \"sort_order\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Profiles",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/profiles",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "profiles"
+          ],
+          "query": [
+            {
+              "key": "subject_id",
+              "value": "00000000-0000-0000-0000-000000000000",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**List Profiles**\n\n`operationId`: `admin_profiles_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ProfileListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Profile",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/profiles",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "profiles"
+          ]
+        },
+        "description": "**Create Profile**\n\n`operationId`: `admin_profiles_create`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `name`\n\n**Body schema:** `ProfileCreateRequest`\n\n**Response schema:** `ProfileResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"subject_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"name\": \"\",\n  \"prompt_name\": \"extraction.system\",\n  \"judge_prompt_name\": \"judge.rubric\",\n  \"extraction_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"judge_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"embedding_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"rerank_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"credential_alias_extraction\": \"\",\n  \"credential_alias_judge\": \"\",\n  \"credential_alias_embedding\": \"\",\n  \"credential_alias_rerank\": \"\",\n  \"target_count\": 20,\n  \"difficulty_mix\": {},\n  \"judge_threshold\": \"6.0\",\n  \"dedup_threshold\": \"0.92\",\n  \"top_k_retrieval\": 50,\n  \"top_n_rerank\": 8,\n  \"hybrid_alpha\": \"0.5\",\n  \"is_default\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Profile",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/profiles/:profile_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "profiles",
+            ":profile_id"
+          ],
+          "variable": [
+            {
+              "key": "profile_id",
+              "value": "{{profile_id}}",
+              "description": "Path variable :profile_id"
+            }
+          ]
+        },
+        "description": "**Delete Profile**\n\n`operationId`: `admin_profiles_delete`\n\n**Requires:** Bearer token (`access_token`).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Profile",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/profiles/:profile_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "profiles",
+            ":profile_id"
+          ],
+          "variable": [
+            {
+              "key": "profile_id",
+              "value": "{{profile_id}}",
+              "description": "Path variable :profile_id"
+            }
+          ]
+        },
+        "description": "**Update Profile**\n\n`operationId`: `admin_profiles_update`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `ProfileUpdateRequest`\n\n**Response schema:** `ProfileResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"prompt_name\": \"\",\n  \"judge_prompt_name\": \"\",\n  \"extraction_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"judge_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"embedding_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"rerank_model_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"credential_alias_extraction\": \"\",\n  \"credential_alias_judge\": \"\",\n  \"credential_alias_embedding\": \"\",\n  \"credential_alias_rerank\": \"\",\n  \"target_count\": 0,\n  \"difficulty_mix\": {},\n  \"judge_threshold\": 0,\n  \"dedup_threshold\": 0,\n  \"top_k_retrieval\": 0,\n  \"top_n_rerank\": 0,\n  \"hybrid_alpha\": 0,\n  \"is_default\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List Prompts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/prompts",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "prompts"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "",
+              "description": "",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "**List Prompts**\n\n`operationId`: `admin_prompts_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `PromptListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Prompt",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/admin/prompts",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "prompts"
+          ]
+        },
+        "description": "**Create Prompt**\n\n`operationId`: `admin_prompts_create`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `name`, `content`\n\n**Body schema:** `PromptCreateRequest`\n\n**Response schema:** `PromptResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"content\": \"\",\n  \"role\": \"system\",\n  \"model_hint\": \"\",\n  \"activate\": false\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Prompt",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/prompts/:prompt_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "prompts",
+            ":prompt_id"
+          ],
+          "variable": [
+            {
+              "key": "prompt_id",
+              "value": "{{prompt_id}}",
+              "description": "Path variable :prompt_id"
+            }
+          ]
+        },
+        "description": "**Delete Prompt**\n\n`operationId`: `admin_prompts_delete`\n\n**Requires:** Bearer token (`access_token`).",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Activate Prompt",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/admin/prompts/:prompt_id/activate",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "admin",
+            "prompts",
+            ":prompt_id",
+            "activate"
+          ],
+          "variable": [
+            {
+              "key": "prompt_id",
+              "value": "{{prompt_id}}",
+              "description": "Path variable :prompt_id"
+            }
+          ]
+        },
+        "description": "**Activate Prompt**\n\n`operationId`: `admin_prompts_activate`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `PromptResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

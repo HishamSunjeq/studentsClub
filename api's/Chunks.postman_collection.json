@@ -1,40 +1,34 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-4353-4000-8000-000000000000",
-    "name": "Search",
-    "description": "Cross-entity search.",
+    "_postman_id": "a1b2c3d4-5755-4000-8000-000000000000",
+    "name": "Chunks",
+    "description": "Look up document chunk excerpts by IDs (used by citation popovers).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Search",
+      "name": "Get Chunks",
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/search",
+          "raw": "{{base_url}}/chunks?ids=",
           "host": [
             "{{base_url}}"
           ],
           "path": [
-            "search"
+            "chunks"
           ],
           "query": [
             {
-              "key": "q",
+              "key": "ids",
               "value": "",
-              "description": "Search query",
-              "disabled": true
-            },
-            {
-              "key": "limit",
-              "value": "10",
-              "description": "",
-              "disabled": true
+              "description": "Comma-separated chunk UUIDs",
+              "disabled": false
             }
           ]
         },
-        "description": "**Search**\n\n`operationId`: `search_query`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `SearchResponse`",
+        "description": "**Get Chunks**\n\n`operationId`: `chunks_by_ids`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ChunkListResponse`",
         "auth": {
           "type": "bearer",
           "bearer": [

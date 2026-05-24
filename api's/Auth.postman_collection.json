@@ -1,90 +1,126 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0002-4000-8000-000000000002",
+    "_postman_id": "a1b2c3d4-4414-4000-8000-000000000000",
     "name": "Auth",
-    "description": "Authentication endpoints — register, login, refresh, logout, change password.",
+    "description": "Authentication endpoints — register, login, refresh, logout, change/forgot/reset password.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Register",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "if (json.access_token) {",
-              "  pm.environment.set('access_token', json.access_token);",
-              "  pm.environment.set('refresh_token', json.refresh_token);",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
+      "name": "Change Password",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{base_url}}/auth/change-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "change-password"
+          ]
+        },
+        "description": "**Change Password**\n\n`operationId`: `auth_change_password`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `current_password`, `new_password`\n\n**Body schema:** `ChangePasswordRequest`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"password123\",\n  \"full_name\": \"Jane Smith\",\n  \"college\": \"Engineering\",\n  \"academic_year\": 2\n}"
-        },
+          "raw": "{\n  \"current_password\": \"\",\n  \"new_password\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Forgot Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": {
-          "raw": "{{base_url}}/auth/register",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "register"]
+          "raw": "{{base_url}}/auth/forgot-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "forgot-password"
+          ]
         },
-        "description": "Create a new user account. Returns access + refresh tokens.\n\n**Body fields:**\n- `email` — valid email address\n- `password` — 8–128 characters\n- `full_name` — 1–200 characters\n- `college` — 1–200 characters\n- `academic_year` — integer 1–7\n\n**Returns:** `TokenResponse` (201)"
+        "description": "**Forgot Password**\n\n`operationId`: `auth_forgot_password`\n\n**Required body fields:** `email`\n\n**Body schema:** `ForgotPasswordRequest`",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"student@example.com\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
       "name": "Login",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "if (json.access_token) {",
-              "  pm.environment.set('access_token', json.access_token);",
-              "  pm.environment.set('refresh_token', json.refresh_token);",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"password123\"\n}"
-        },
         "url": {
           "raw": "{{base_url}}/auth/login",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "login"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
         },
-        "description": "Authenticate with email and password. Returns access + refresh tokens.\n\n**Returns:** `TokenResponse` (200)"
+        "description": "**Login**\n\n`operationId`: `auth_login`\n\n**Required body fields:** `email`, `password`\n\n**Body schema:** `LoginRequest`\n\n**Response schema:** `TokenResponse`",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
-      "response": []
-    },
-    {
-      "name": "Refresh Token",
+      "response": [],
       "event": [
         {
           "listen": "test",
           "script": {
             "exec": [
               "const json = pm.response.json();",
-              "if (json.access_token) {",
+              "if (json && json.access_token) {",
               "  pm.environment.set('access_token', json.access_token);",
               "  pm.environment.set('refresh_token', json.refresh_token);",
               "}"
@@ -92,66 +128,167 @@
             "type": "text/javascript"
           }
         }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/auth/refresh",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "refresh"]
-        },
-        "description": "Exchange a valid refresh token for a new token pair.\n\n**Returns:** `TokenResponse` (200)"
-      },
-      "response": []
+      ]
     },
     {
       "name": "Logout",
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
-        },
         "url": {
           "raw": "{{base_url}}/auth/logout",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "logout"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "logout"
+          ]
         },
-        "description": "Revoke the provided refresh token.\n\n**Returns:** 204 No Content"
+        "description": "**Logout**\n\n`operationId`: `auth_logout`\n\n**Required body fields:** `refresh_token`\n\n**Body schema:** `LogoutRequest`",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refresh_token\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
-      "name": "Change Password",
+      "name": "Refresh",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{base_url}}/auth/refresh",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "refresh"
+          ]
+        },
+        "description": "**Refresh**\n\n`operationId`: `auth_refresh`\n\n**Required body fields:** `refresh_token`\n\n**Body schema:** `RefreshRequest`\n\n**Response schema:** `TokenResponse`",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"current_password\": \"password123\",\n  \"new_password\": \"newpassword456\"\n}"
-        },
+          "raw": "{\n  \"refresh_token\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json && json.access_token) {",
+              "  pm.environment.set('access_token', json.access_token);",
+              "  pm.environment.set('refresh_token', json.refresh_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "url": {
-          "raw": "{{base_url}}/auth/change-password",
-          "host": ["{{base_url}}"],
-          "path": ["auth", "change-password"]
+          "raw": "{{base_url}}/auth/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "register"
+          ]
         },
-        "description": "Change the authenticated user's password.\n\n**Requires:** Bearer token\n\n**Body fields:**\n- `current_password` — current password\n- `new_password` — 8–128 characters\n\n**Returns:** 204 No Content"
+        "description": "**Register**\n\n`operationId`: `auth_register`\n\n**Required body fields:** `email`, `password`, `full_name`, `college`, `academic_year`\n\n**Body schema:** `RegisterRequest`\n\n**Response schema:** `TokenResponse`",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"student@example.com\",\n  \"password\": \"\",\n  \"full_name\": \"\",\n  \"college\": \"\",\n  \"academic_year\": 0\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json && json.access_token) {",
+              "  pm.environment.set('access_token', json.access_token);",
+              "  pm.environment.set('refresh_token', json.refresh_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/auth/reset-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "auth",
+            "reset-password"
+          ]
+        },
+        "description": "**Reset Password**\n\n`operationId`: `auth_reset_password`\n\n**Required body fields:** `token`, `new_password`\n\n**Body schema:** `ResetPasswordRequest`",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"\",\n  \"new_password\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     }

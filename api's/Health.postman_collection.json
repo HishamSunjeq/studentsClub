@@ -1,0 +1,47 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-3209-4000-8000-000000000000",
+    "name": "Health",
+    "description": "Liveness and readiness probes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{root_url}}/health",
+          "host": [
+            "{{root_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "**Health**\n\n`operationId`: `health_health_get`"
+      },
+      "response": []
+    },
+    {
+      "name": "Health Ready",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{root_url}}/health/ready",
+          "host": [
+            "{{root_url}}"
+          ],
+          "path": [
+            "health",
+            "ready"
+          ]
+        },
+        "description": "**Health Ready**\n\n`operationId`: `health_ready_health_ready_get`"
+      },
+      "response": []
+    }
+  ]
+}

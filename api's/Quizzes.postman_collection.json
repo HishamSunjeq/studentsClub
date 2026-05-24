@@ -1,183 +1,303 @@
 {
   "info": {
-    "_postman_id": "a1b2c3d4-0008-4000-8000-000000000008",
+    "_postman_id": "a1b2c3d4-4571-4000-8000-000000000000",
     "name": "Quizzes",
-    "description": "Quiz session endpoints — start, browse, answer questions, complete a quiz, and fetch the full result breakdown.",
+    "description": "Quiz sessions: start, answer, complete, list, fetch result.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "Start Quiz",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "const json = pm.response.json();",
-              "if (json.id) {",
-              "  pm.environment.set('quiz_session_id', json.id);",
-              "}",
-              "if (json.questions && json.questions.length > 0) {",
-              "  const q = json.questions[0];",
-              "  pm.environment.set('question_id', q.id);",
-              "  if (q.choices && q.choices.length > 0) {",
-              "    pm.environment.set('choice_id', q.choices[0].id);",
-              "  }",
-              "}"
-            ],
-            "type": "text/javascript"
-          }
-        }
-      ],
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"subject_id\": \"{{subject_id}}\",\n  \"count\": 10,\n  \"difficulties\": null\n}"
-        },
         "url": {
           "raw": "{{base_url}}/quizzes",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes"]
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes"
+          ]
         },
-        "description": "Create and start a new quiz session for a subject.\n\n**Requires:** Bearer token\n\n**Body fields:**\n- `subject_id` — UUID of the subject\n- `count` — number of questions to draw (1–50, default 10)\n- `difficulties` *(optional)* — array of `easy` / `medium` / `hard` to filter the question pool. Pass `null` or omit for all difficulties.\n\n**Example with difficulty filter:**\n```json\n{ \"subject_id\": \"...\", \"count\": 20, \"difficulties\": [\"medium\", \"hard\"] }\n```\n\n**Returns:** `QuizSessionWithQuestionsResponse` (201) — includes shuffled questions with choices (correct answer hidden)."
+        "description": "**Start Quiz**\n\n`operationId`: `quizzes_start`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `subject_id`\n\n**Body schema:** `QuizStartRequest`\n\n**Response schema:** `QuizSessionWithQuestionsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"subject_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"count\": 10,\n  \"difficulties\": [\n    \"easy\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
       "name": "List My Quizzes",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/quizzes/me?page=1&size=20",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "me"],
+          "raw": "{{base_url}}/quizzes/me",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            "me"
+          ],
           "query": [
             {
+              "key": "page",
+              "value": "1",
+              "description": "",
+              "disabled": true
+            },
+            {
+              "key": "size",
+              "value": "20",
+              "description": "",
+              "disabled": true
+            },
+            {
               "key": "status",
-              "value": "",
-              "disabled": true,
-              "description": "Filter by status: in_progress | completed | abandoned"
+              "value": "in_progress",
+              "description": "",
+              "disabled": true
             },
             {
               "key": "subject_id",
-              "value": "",
-              "disabled": true,
-              "description": "Filter by subject UUID"
-            },
-            { "key": "page", "value": "1" },
-            { "key": "size", "value": "20", "description": "Max 100" }
+              "value": "00000000-0000-0000-0000-000000000000",
+              "description": "",
+              "disabled": true
+            }
           ]
         },
-        "description": "List all quiz sessions for the authenticated user. Drives the History page.\n\n**Requires:** Bearer token\n\n**Query params:**\n- `status` *(optional)* — `in_progress` | `completed` | `abandoned`\n- `subject_id` *(optional)* — UUID, filter to a single subject\n- `page` — default 1\n- `size` — default 20, max 100\n\n**Returns:** `QuizSessionListResponse` (200)"
+        "description": "**List My Quizzes**\n\n`operationId`: `quizzes_list_mine`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuizSessionListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
-      "name": "Get Quiz Session",
+      "name": "Get Quiz",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "{{quiz_session_id}}"]
+          "raw": "{{base_url}}/quizzes/:session_id",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            ":session_id"
+          ],
+          "variable": [
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
         },
-        "description": "Retrieve a quiz session's summary (without questions).\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionResponse` (200)"
-      },
-      "response": []
-    },
-    {
-      "name": "Get Quiz Session with Questions",
-      "request": {
+        "description": "**Get Quiz**\n\n`operationId`: `quizzes_get`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuizSessionResponse`",
         "auth": {
           "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}/questions",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "{{quiz_session_id}}", "questions"]
-        },
-        "description": "Retrieve a quiz session along with all its questions, choices, and the IDs of already-answered questions. Used by the player on resume.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionWithQuestionsResponse` (200) — includes `answered_question_ids` for resumability."
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
       "name": "Submit Answer",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" }
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
         ],
+        "url": {
+          "raw": "{{base_url}}/quizzes/:session_id/answer",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            ":session_id",
+            "answer"
+          ],
+          "variable": [
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
+        },
+        "description": "**Submit Answer**\n\n`operationId`: `quizzes_submit_answer`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `question_id`, `choice_id`\n\n**Body schema:** `QuizAnswerRequest`\n\n**Response schema:** `QuizAnswerResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"question_id\": \"{{question_id}}\",\n  \"choice_id\": \"{{choice_id}}\"\n}"
-        },
-        "url": {
-          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}/answer",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "{{quiz_session_id}}", "answer"]
-        },
-        "description": "Submit an answer for one question in a quiz session.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Body fields:**\n- `question_id` — UUID of the question being answered\n- `choice_id` — UUID of the selected choice\n\n**Returns:** `QuizAnswerResponse` (200) — reveals `is_correct`, `correct_choice_id`, `explanation`, running `score`."
+          "raw": "{\n  \"question_id\": \"00000000-0000-0000-0000-000000000000\",\n  \"choice_id\": \"00000000-0000-0000-0000-000000000000\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
       },
       "response": []
     },
     {
       "name": "Complete Quiz",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "POST",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}/complete",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "{{quiz_session_id}}", "complete"]
+          "raw": "{{base_url}}/quizzes/:session_id/complete",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            ":session_id",
+            "complete"
+          ],
+          "variable": [
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
         },
-        "description": "Mark a quiz session as completed. Call this after submitting all answers.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizSessionResponse` (200) with final `score` and `completed_at`."
+        "description": "**Complete Quiz**\n\n`operationId`: `quizzes_complete`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuizSessionResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Quiz With Questions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/quizzes/:session_id/questions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            ":session_id",
+            "questions"
+          ],
+          "variable": [
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
+        },
+        "description": "**Get Quiz With Questions**\n\n`operationId`: `quizzes_get_with_questions`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuizSessionWithQuestionsResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     },
     {
       "name": "Get Quiz Result",
       "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
-        },
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/quizzes/{{quiz_session_id}}/result",
-          "host": ["{{base_url}}"],
-          "path": ["quizzes", "{{quiz_session_id}}", "result"]
+          "raw": "{{base_url}}/quizzes/:session_id/result",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quizzes",
+            ":session_id",
+            "result"
+          ],
+          "variable": [
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
         },
-        "description": "Full result payload for a quiz session — drives the Result page.\n\n**Requires:** Bearer token\n\n**Path params:**\n- `quiz_session_id` — UUID\n\n**Returns:** `QuizResultResponse` (200) with:\n- `score`, `total`, `accuracy` (0..1)\n- `correct_count`, `incorrect_count`, `skipped_count`\n- `breakdown_by_difficulty[]` — `{ difficulty, correct, total }` per difficulty bucket\n- `trend` — accuracy delta vs prior completed quiz in same subject (signed float, `null` if no prior)\n- `questions[]` — per-question breakdown with `selected_choice_id`, `correct_choice_id`, `is_correct`, `explanation`, full `choices[]`."
+        "description": "**Get Quiz Result**\n\n`operationId`: `quizzes_get_result`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `QuizResultResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
       },
       "response": []
     }

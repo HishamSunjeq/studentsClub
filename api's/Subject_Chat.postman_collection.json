@@ -1,0 +1,247 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-7425-4000-8000-000000000000",
+    "name": "Subject_Chat",
+    "description": "Per-subject RAG-grounded Q&A chat. Sessions, message history, SSE event stream.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Sessions",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/:subject_id/chat/sessions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "subjects",
+            ":subject_id",
+            "chat",
+            "sessions"
+          ],
+          "variable": [
+            {
+              "key": "subject_id",
+              "value": "{{subject_id}}",
+              "description": "Path variable :subject_id"
+            }
+          ]
+        },
+        "description": "**List Sessions**\n\n`operationId`: `subject_chat_sessions_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ChatSessionListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create Session",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/subjects/:subject_id/chat/sessions",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "subjects",
+            ":subject_id",
+            "chat",
+            "sessions"
+          ],
+          "variable": [
+            {
+              "key": "subject_id",
+              "value": "{{subject_id}}",
+              "description": "Path variable :subject_id"
+            }
+          ]
+        },
+        "description": "**Create Session**\n\n`operationId`: `subject_chat_sessions_create`\n\n**Requires:** Bearer token (`access_token`).\n\n**Body schema:** `ChatSessionCreateRequest`\n\n**Response schema:** `ChatSessionResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stream Chat Events",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/:subject_id/chat/sessions/:session_id/events?token=",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "subjects",
+            ":subject_id",
+            "chat",
+            "sessions",
+            ":session_id",
+            "events"
+          ],
+          "query": [
+            {
+              "key": "token",
+              "value": "",
+              "description": "Access JWT (EventSource cannot set headers)",
+              "disabled": false
+            }
+          ],
+          "variable": [
+            {
+              "key": "subject_id",
+              "value": "{{subject_id}}",
+              "description": "Path variable :subject_id"
+            },
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
+        },
+        "description": "**Stream Chat Events**\n\n`operationId`: `subject_chat_events`"
+      },
+      "response": []
+    },
+    {
+      "name": "List Messages",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/subjects/:subject_id/chat/sessions/:session_id/messages",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "subjects",
+            ":subject_id",
+            "chat",
+            "sessions",
+            ":session_id",
+            "messages"
+          ],
+          "variable": [
+            {
+              "key": "subject_id",
+              "value": "{{subject_id}}",
+              "description": "Path variable :subject_id"
+            },
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
+        },
+        "description": "**List Messages**\n\n`operationId`: `subject_chat_messages_list`\n\n**Requires:** Bearer token (`access_token`).\n\n**Response schema:** `ChatMessageListResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/subjects/:subject_id/chat/sessions/:session_id/messages",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "subjects",
+            ":subject_id",
+            "chat",
+            "sessions",
+            ":session_id",
+            "messages"
+          ],
+          "variable": [
+            {
+              "key": "subject_id",
+              "value": "{{subject_id}}",
+              "description": "Path variable :subject_id"
+            },
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "description": "Path variable :session_id"
+            }
+          ]
+        },
+        "description": "**Send Message**\n\n`operationId`: `subject_chat_send`\n\n**Requires:** Bearer token (`access_token`).\n\n**Required body fields:** `content`\n\n**Body schema:** `ChatSendRequest`\n\n**Response schema:** `ChatSendResponse`",
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{access_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"content\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "response": []
+    }
+  ]
+}
