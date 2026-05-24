@@ -40,6 +40,8 @@ class UploadResponse(BaseModel):
     finalized_at: datetime | None
     extracted_at: datetime | None
     extraction_error: str | None
+    extraction_backend: str | None = None
+    extraction_strategy: str | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -96,6 +98,9 @@ class GenerateRequest(BaseModel):
     difficulty_mix: DifficultyMix = Field(default_factory=DifficultyMix)
     question_types: list[str] = Field(default_factory=lambda: ["mcq"])
     language: str = "en"
+    # Admin-only per-run overrides (validated in the service layer).
+    extraction_model_id: UUID | None = None
+    profile_id: UUID | None = None
 
     @field_validator("difficulty_mix")
     @classmethod
@@ -104,6 +109,35 @@ class GenerateRequest(BaseModel):
         if total != 100:
             raise ValueError(f"difficulty_mix must sum to 100, got {total}")
         return v
+
+
+class GenerationModelOption(BaseModel):
+    id: UUID
+    display_name: str
+    model_id: str
+    provider: str
+
+
+class GenerationProfileOption(BaseModel):
+    id: UUID
+    name: str
+    subject_id: UUID | None = None
+    is_default: bool
+
+
+class GenerationDefaultsResponse(BaseModel):
+    """What *would* run for this upload, plus (admins only) the selectable
+    active extraction models and profiles for a per-run override.
+    """
+
+    profile_id: UUID | None = None
+    profile_name: str
+    extraction_provider: str
+    extraction_model: str
+    extraction_model_display: str
+    is_admin: bool
+    models: list[GenerationModelOption] = Field(default_factory=list)
+    profiles: list[GenerationProfileOption] = Field(default_factory=list)
 
 
 class GenerateResponse(BaseModel):

@@ -62,8 +62,49 @@ async def get_model(provider: str, model_id: str) -> ModelRecord | None:
         return record
 
 
+_default_cache: dict[str, tuple[float, ModelRecord | None]] = {}
+
+
+async def get_default_model(kind: str) -> ModelRecord | None:
+    """Return the top active model for `kind` (lowest `sort_order`).
+
+    This is what runs when a generation profile doesn't pin a model for
+    that stage — so the registry's active models actually drive defaults
+    instead of a hardcoded string. Cached for 60s.
+    """
+    now = time.monotonic()
+    cached = _default_cache.get(kind)
+    if cached and now - cached[0] < _CACHE_TTL_SECONDS:
+        return cached[1]
+
+    async with _lock:
+        cached = _default_cache.get(kind)
+        if cached and time.monotonic() - cached[0] < _CACHE_TTL_SECONDS:
+            return cached[1]
+        record = await _load_default(kind)
+        _default_cache[kind] = (time.monotonic(), record)
+        return record
+
+
+async def _load_default(kind: str) -> ModelRecord | None:
+    try:
+        async with AsyncSessionLocal() as db:
+            row = (
+                await db.execute(
+                    select(AIModel)
+                    .where(AIModel.kind == ModelKind(kind), AIModel.is_active.is_(True))
+                    .order_by(AIModel.sort_order.asc(), AIModel.model_id.asc())
+                    .limit(1)
+                )
+            ).scalar_one_or_none()
+            return _to_record(row) if row is not None else None
+    except Exception:
+        return None
+
+
 def invalidate() -> None:
     _cache.clear()
+    _default_cache.clear()
 
 
 async def _load(provider: str, model_id: str) -> ModelRecord | None:

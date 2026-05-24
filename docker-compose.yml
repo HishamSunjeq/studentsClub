@@ -21,11 +21,13 @@ services:
       S3_SECRET_KEY: minio12345
       AI_PROVIDER: mock
       QDRANT_URL: http://qdrant:6333
+      UNSTRUCTURED_API_URL: http://unstructured-api:8000
+      EXTRACTION_BACKEND: unstructured
       # Phase 2 credential store — Fernet (url-safe 32-byte base64). Override in prod.
       AI_CREDENTIAL_KEY: ${AI_CREDENTIAL_KEY:-laOuz-EkAKsMMOH4ZTxBxnzziJH9zGJm5gNdRSmipM8=}
       # Default admin seeded on first boot when no admin exists.
       # Override these (especially the password) for any non-local deployment.
-      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL:-admin@studentsclub.local}
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL:-admin@studentsclub.io}
       DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-admin12345}
       DEFAULT_ADMIN_NAME: ${DEFAULT_ADMIN_NAME:-Default Admin}
       S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
@@ -66,15 +68,22 @@ services:
       S3_SECRET_KEY: minio12345
       AI_PROVIDER: mock
       QDRANT_URL: http://qdrant:6333
+      UNSTRUCTURED_API_URL: http://unstructured-api:8000
+      EXTRACTION_BACKEND: unstructured
       AI_CREDENTIAL_KEY: ${AI_CREDENTIAL_KEY:-laOuz-EkAKsMMOH4ZTxBxnzziJH9zGJm5gNdRSmipM8=}
       # Worker is a consumer — don't re-run migrations from here.
       RUN_MIGRATIONS: "0"
+      # Each Celery task runs in its own event loop — use NullPool so DB
+      # connections never get reused across a closed loop.
+      WORKER_MODE: "1"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       qdrant:
+        condition: service_started
+      unstructured-api:
         condition: service_started
       api:
         condition: service_started
@@ -126,6 +135,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+
+  # ── unstructured-api (document extraction) ────────────────────────────────
+  unstructured-api:
+    image: quay.io/unstructured-io/unstructured-api:latest
+    ports:
+      - "8001:8000"
+    environment:
+      # Allow longer documents; the API caps request bytes by default.
+      UNSTRUCTURED_ALLOWED_MIMETYPES: "*"
     restart: unless-stopped
 
   # ── Qdrant (Vector DB for RAG) ────────────────────────────────────────────

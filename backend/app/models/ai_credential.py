@@ -48,7 +48,11 @@ class AICredential(UUIDMixin, Base):
     key_last4: Mapped[str] = mapped_column(Text, nullable=False, server_default="")
 
     scope: Mapped[CredentialScope] = mapped_column(
-        Enum(CredentialScope, name="ai_credential_scope"),
+        Enum(
+            CredentialScope,
+            name="ai_credential_scope",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=CredentialScope.global_,
         server_default="global",

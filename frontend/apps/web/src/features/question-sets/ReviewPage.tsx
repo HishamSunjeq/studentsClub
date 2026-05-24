@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -23,7 +23,6 @@ import {
 } from "@/api/generated/endpoints/question-sets/question-sets";
 import {
   useQuestionsDeactivate,
-  useQuestionsRegenerate,
   useQuestionsUpdate,
 } from "@/api/generated/endpoints/questions/questions";
 import { useChunksByIds } from "@/api/generated/endpoints/chunks/chunks";
@@ -31,11 +30,38 @@ import type {
   QuestionDifficulty,
   QuestionResponse,
 } from "@/api/generated/schemas";
+import { apiInstance } from "@/api/client";
 import { useAuthStore } from "@/features/auth/auth.store";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+
+interface RetrievalPreviewChunk {
+  chunk_id: string;
+  upload_id: string | null;
+  section_title: string | null;
+  text: string;
+  score: number;
+}
+
+interface RetrievalPreviewResponse {
+  question_id: string;
+  query: string;
+  hyde: string | null;
+  chunks: RetrievalPreviewChunk[];
+  degraded: boolean;
+  degraded_reason: string | null;
+}
 
 // Color-coded against a nominal pass threshold; profiles default judge_threshold≈7.
 const QUALITY_PASS = 7;
@@ -390,6 +416,7 @@ function QuestionEditor({
   const [choices, setChoices] = useState(
     question.choices.map((c) => ({ ...c })),
   );
+  const [regenerateOpen, setRegenerateOpen] = useState(false);
 
   const updateMutation = useQuestionsUpdate({
     mutation: {
@@ -400,15 +427,6 @@ function QuestionEditor({
       onError: (err: { response?: { data?: { detail?: string } } }) => {
         toast.error(err.response?.data?.detail ?? "Failed to save");
       },
-    },
-  });
-  const regenerateMutation = useQuestionsRegenerate({
-    mutation: {
-      onSuccess: () => {
-        toast.success("Regenerated");
-        onSaved();
-      },
-      onError: () => toast.error("Regenerate failed"),
     },
   });
   const deactivateMutation = useQuestionsDeactivate({
@@ -483,14 +501,9 @@ function QuestionEditor({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => regenerateMutation.mutate({ questionId: question.id })}
-              disabled={regenerateMutation.isPending}
+              onClick={() => setRegenerateOpen(true)}
             >
-              {regenerateMutation.isPending ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <RotateCcw className="size-3.5" strokeWidth={1.5} />
-              )}
+              <RotateCcw className="size-3.5" strokeWidth={1.5} />
               Regenerate
             </Button>
             <Button
@@ -506,6 +519,13 @@ function QuestionEditor({
           </div>
         )}
       </div>
+
+      <RegenerateModal
+        questionId={question.id}
+        open={regenerateOpen}
+        onOpenChange={setRegenerateOpen}
+        onSuccess={onSaved}
+      />
 
       {/* Parent diff — previous version at this position */}
       {previousVersion && (
@@ -665,6 +685,186 @@ function QuestionEditor({
         </div>
       )}
     </div>
+  );
+}
+
+function RegenerateModal({
+  questionId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  questionId: string;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onSuccess: () => void;
+}) {
+  const [preview, setPreview] = useState<RetrievalPreviewResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setPreview(null);
+      setError(null);
+      setSelected(new Set());
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    apiInstance
+      .get<RetrievalPreviewResponse>(
+        `/api/v1/questions/${questionId}/retrieval-preview`,
+      )
+      .then((res) => {
+        if (cancelled) return;
+        setPreview(res.data);
+        setSelected(new Set(res.data.chunks.map((c) => c.chunk_id)));
+      })
+      .catch((e: { response?: { data?: { detail?: string } } }) => {
+        if (cancelled) return;
+        setError(e.response?.data?.detail ?? "Failed to load retrieval preview");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, questionId]);
+
+  function toggle(id: string) {
+    setSelected((s) => {
+      const next = new Set(s);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function confirm() {
+    setSubmitting(true);
+    try {
+      await apiInstance.post(`/api/v1/questions/${questionId}/regenerate`, {
+        chunk_ids: Array.from(selected),
+      });
+      toast.success("Regenerated");
+      onSuccess();
+      onOpenChange(false);
+    } catch (e) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      toast.error(err.response?.data?.detail ?? "Regenerate failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Regenerate with grounded context</DialogTitle>
+          <DialogDescription>
+            Pick the source chunks the AI should re-prompt against. Deselect any
+            that look off-topic.
+          </DialogDescription>
+        </DialogHeader>
+
+        {loading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+          </div>
+        ) : error ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+            {error}
+          </div>
+        ) : preview ? (
+          <div className="space-y-3">
+            {preview.degraded && (
+              <div className="flex items-start gap-2 rounded-lg border border-[color:var(--warning)]/30 bg-[color:var(--warning)]/10 p-3 text-xs text-[color:var(--warning)]">
+                <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
+                <div>
+                  <p className="font-medium">Retrieval degraded</p>
+                  <p className="opacity-90">
+                    {preview.degraded_reason ??
+                      "The retriever returned no usable hits — regeneration will fall back to the original source excerpt."}
+                  </p>
+                </div>
+              </div>
+            )}
+            {preview.chunks.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                No retrievable chunks for this question. Regenerating will use
+                the original source excerpt only.
+              </p>
+            ) : (
+              <div className="max-h-[50vh] space-y-2 overflow-y-auto pr-1">
+                {preview.chunks.map((c, i) => {
+                  const checked = selected.has(c.chunk_id);
+                  return (
+                    <label
+                      key={c.chunk_id}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors",
+                        checked
+                          ? "border-primary/40 bg-primary/5"
+                          : "border-border bg-card hover:bg-muted/40",
+                      )}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={() => toggle(c.chunk_id)}
+                        className="mt-0.5"
+                      />
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                          <FileText className="size-3" />
+                          {c.section_title || `Chunk #${i + 1}`}
+                          <span className="ml-auto tabular-nums">
+                            {c.score.toFixed(3)}
+                          </span>
+                        </div>
+                        <p className="line-clamp-3 font-study text-xs leading-relaxed text-muted-foreground">
+                          {c.text}
+                        </p>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
+          <Button onClick={confirm} disabled={submitting || loading}>
+            {submitting ? (
+              <>
+                <Loader2 className="size-3.5 animate-spin" />
+                Regenerating…
+              </>
+            ) : (
+              <>
+                <RotateCcw className="size-3.5" strokeWidth={1.5} />
+                Regenerate ({selected.size})
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

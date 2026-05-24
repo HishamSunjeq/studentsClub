@@ -4,6 +4,7 @@ import {
   BarChart3,
   KeyRound,
   Cpu,
+  FileText,
   ScrollText,
   SlidersHorizontal,
 } from "lucide-react";
@@ -18,6 +19,7 @@ const ADMIN_NAV = [
   { label: "Models", icon: Cpu, to: "/admin/models" },
   { label: "Prompts", icon: ScrollText, to: "/admin/prompts" },
   { label: "Profiles", icon: SlidersHorizontal, to: "/admin/profiles" },
+  { label: "Extraction", icon: FileText, to: "/admin/extraction" },
 ];
 
 export default function AdminLayout() {

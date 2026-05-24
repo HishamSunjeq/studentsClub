@@ -19,6 +19,7 @@ import {
   uploadsPreviewUrl,
   useUploadsDelete,
   useUploadsGenerate,
+  useUploadsGenerationDefaults,
   useUploadsGet,
   useUploadsUpdate,
 } from "@/api/generated/endpoints/uploads/uploads";
@@ -44,6 +45,8 @@ type GenerationSettings = {
   difficulty_mix: { easy: number; medium: number; hard: number };
   question_types: string[];
   language: string;
+  extraction_model_id?: string | null;
+  profile_id?: string | null;
 };
 
 const DEFAULT_SETTINGS: GenerationSettings = {
@@ -260,6 +263,7 @@ export default function UploadDetailPage() {
           filename={upload.original_filename}
         />
         <GenerationPanel
+          uploadId={upload.id}
           canGenerate={canGenerate}
           uploadStatus={upload.status}
           extractedTextPreview={upload.extracted_text_preview}
@@ -653,18 +657,21 @@ function FilePreviewPanel({
 // ---------- Generation panel ----------
 
 function GenerationPanel({
+  uploadId,
   canGenerate,
   uploadStatus,
   extractedTextPreview,
   isGenerating,
   onGenerate,
 }: {
+  uploadId: string;
   canGenerate: boolean;
   uploadStatus: string;
   extractedTextPreview?: string | null;
   isGenerating: boolean;
   onGenerate: (settings: GenerationSettings) => void;
 }) {
+  const { data: defaults } = useUploadsGenerationDefaults(uploadId);
   const [settings, setSettings] = useState<GenerationSettings>(() => {
     if (typeof window === "undefined") return DEFAULT_SETTINGS;
     try {
@@ -718,6 +725,71 @@ function GenerationPanel({
       )}
 
       <div className="space-y-5">
+        {/* What will run + admin override */}
+        {defaults && (
+          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
+            <p className="text-xs text-muted-foreground">
+              Will generate with{" "}
+              <span className="font-medium text-foreground">
+                {defaults.extraction_model_display}
+              </span>{" "}
+              <span className="text-muted-foreground">
+                (profile: {defaults.profile_name})
+              </span>
+            </p>
+
+            {defaults.is_admin && (
+              <div className="grid grid-cols-1 gap-2">
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Override model (admin)
+                  </label>
+                  <select
+                    value={settings.extraction_model_id ?? ""}
+                    onChange={(e) =>
+                      persist({
+                        ...settings,
+                        extraction_model_id: e.target.value || null,
+                      })
+                    }
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
+                  >
+                    <option value="">Profile default</option>
+                    {defaults.models.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.display_name} ({m.provider})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    Override profile (admin)
+                  </label>
+                  <select
+                    value={settings.profile_id ?? ""}
+                    onChange={(e) =>
+                      persist({
+                        ...settings,
+                        profile_id: e.target.value || null,
+                      })
+                    }
+                    className="h-9 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20"
+                  >
+                    <option value="">Resolve automatically</option>
+                    {defaults.profiles.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                        {p.is_default ? " (default)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Count */}
         <div>
           <div className="mb-2 flex items-center justify-between">

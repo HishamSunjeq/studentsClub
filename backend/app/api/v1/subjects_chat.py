@@ -162,6 +162,7 @@ async def send_message(
         query=body.content,
         history=history,
         user_id=current_user.id,
+        session_id=session_id,
     )
 
     assistant_msg = ChatMessage(

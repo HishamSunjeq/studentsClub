@@ -7,6 +7,7 @@ from app.models.upload import UploadStatus
 from app.schemas.uploads import (
     GenerateRequest,
     GenerateResponse,
+    GenerationDefaultsResponse,
     PresignResponse,
     PreviewUrlResponse,
     UploadCreateRequest,
@@ -125,6 +126,21 @@ async def get_preview_url(
     db: DBSession,
 ) -> PreviewUrlResponse:
     return await uploads_service.get_preview_url(
+        db=db, upload_id=upload_id, user=current_user
+    )
+
+
+@router.get(
+    "/{upload_id}/generation-defaults",
+    response_model=GenerationDefaultsResponse,
+    operation_id="uploads_generation_defaults",
+)
+async def generation_defaults(
+    upload_id: UUID,
+    current_user: CurrentUser,
+    db: DBSession,
+) -> GenerationDefaultsResponse:
+    return await uploads_service.get_generation_defaults(
         db=db, upload_id=upload_id, user=current_user
     )
 

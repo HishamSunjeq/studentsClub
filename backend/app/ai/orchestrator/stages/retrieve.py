@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import uuid
 
+from app.ai.events import safe_publish
 from app.ai.orchestrator.profile import ResolvedProfile
 from app.ai.orchestrator.schemas import RetrievedChunk, RetrievedContext, Section
 from app.ai.rag.embedder.factory import get_embedder
@@ -37,6 +38,27 @@ async def retrieve_for_section(
 ) -> RetrievedContext:
     query = (section.title or "") + "\n\n" + section.text[:2000]
 
+    async def _degraded(reason: str) -> RetrievedContext:
+        logger.warning(
+            "retrieve: degraded section=%s reason=%s", section.position, reason
+        )
+        if upload_id is not None:
+            await safe_publish(
+                upload_id,
+                {
+                    "type": "retrieve.degraded",
+                    "section_position": section.position,
+                    "reason": reason,
+                },
+            )
+        return RetrievedContext(
+            section_position=section.position,
+            query=query,
+            hyde=hyde_text,
+            degraded=True,
+            degraded_reason=reason,
+        )
+
     # 1. HyDE expansion (best-effort; falls back to the section text itself).
     hyde_text = await _hyde_expand(
         profile=profile,
@@ -56,7 +78,7 @@ async def retrieve_for_section(
         dense = (await embedder.embed([embed_query]))[0]
     except Exception:
         logger.exception("retrieve: dense embed failed for section=%s", section.position)
-        return RetrievedContext(section_position=section.position, query=query, hyde=hyde_text)
+        return await _degraded("dense_embed_failed")
 
     sparse_encoder = BM25SparseEncoder()
     try:
@@ -79,10 +101,10 @@ async def retrieve_for_section(
         )
     except Exception:
         logger.exception("retrieve: hybrid_search failed for section=%s", section.position)
-        return RetrievedContext(section_position=section.position, query=query, hyde=hyde_text)
+        return await _degraded("hybrid_search_failed")
 
     if not hits:
-        return RetrievedContext(section_position=section.position, query=query, hyde=hyde_text)
+        return await _degraded("no_hits")
 
     # 4. Rerank top candidates.
     if profile.rerank_provider:

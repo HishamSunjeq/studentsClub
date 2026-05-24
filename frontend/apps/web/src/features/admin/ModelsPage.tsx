@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Cpu, Plus, Trash2 } from "lucide-react";
@@ -7,6 +7,7 @@ import {
   useAdminModelsCreate,
   useAdminModelsUpdate,
   useAdminModelsDelete,
+  useAdminProfilesList,
   getAdminModelsListQueryKey,
 } from "@/api/generated/endpoints/admin/admin";
 import {
@@ -39,6 +40,7 @@ const KINDS = Object.values(ModelCreateRequestKind);
 export default function ModelsPage() {
   const queryClient = useQueryClient();
   const { data, isLoading } = useAdminModelsList();
+  const { data: profilesData } = useAdminProfilesList();
   const update = useAdminModelsUpdate();
   const del = useAdminModelsDelete();
   const [addOpen, setAddOpen] = useState(false);
@@ -47,6 +49,34 @@ export default function ModelsPage() {
     queryClient.invalidateQueries({ queryKey: getAdminModelsListQueryKey() });
 
   const items = data?.items ?? [];
+
+  // How many profiles reference each model id (across all 4 FK slots)?
+  const profileRefCount = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const p of profilesData?.items ?? []) {
+      for (const mid of [
+        p.extraction_model_id,
+        p.judge_model_id,
+        p.embedding_model_id,
+        p.rerank_model_id,
+      ]) {
+        if (mid) counts.set(mid, (counts.get(mid) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [profilesData]);
+
+  // The registry default per kind = top active model by sort_order. This is
+  // what actually runs when no profile pins a model for that stage.
+  const registryDefaultIds = useMemo(() => {
+    const byKind = new Map<string, ModelResponse>();
+    for (const m of items) {
+      if (!m.is_active) continue;
+      const current = byKind.get(m.kind);
+      if (!current || m.sort_order < current.sort_order) byKind.set(m.kind, m);
+    }
+    return new Set(Array.from(byKind.values()).map((m) => m.id));
+  }, [items]);
 
   const toggleActive = (m: ModelResponse) => {
     update.mutate(
@@ -111,6 +141,7 @@ export default function ModelsPage() {
                 <th className="px-4 py-2.5 text-left font-medium">
                   $/Mtok in·out
                 </th>
+                <th className="px-4 py-2.5 text-left font-medium">Used by</th>
                 <th className="px-4 py-2.5 text-left font-medium">Active</th>
                 <th className="px-4 py-2.5 text-right font-medium">Actions</th>
               </tr>
@@ -138,6 +169,23 @@ export default function ModelsPage() {
                   </td>
                   <td className="px-4 py-3 font-mono text-muted-foreground">
                     {m.input_cost_per_mtoken}·{m.output_cost_per_mtoken}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {profileRefCount.get(m.id) ? (
+                        <Badge variant="outline">
+                          {profileRefCount.get(m.id)} profile
+                          {profileRefCount.get(m.id)! > 1 ? "s" : ""}
+                        </Badge>
+                      ) : null}
+                      {registryDefaultIds.has(m.id) ? (
+                        <Badge variant="default">default</Badge>
+                      ) : null}
+                      {!profileRefCount.get(m.id) &&
+                      !registryDefaultIds.has(m.id) ? (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-4 py-3">
                     <button
