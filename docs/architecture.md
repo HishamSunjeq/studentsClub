@@ -4,37 +4,26 @@ A bird's-eye view of services, data flow, and where each kind of state lives.
 
 ## Services
 
-```
-                          ┌──────────────────────┐
-                          │     Web (Vite)       │  http://localhost:5173
-                          │  React 19 + Orval    │
-                          └──────────┬───────────┘
-                                     │ REST + SSE
-                                     ▼
-┌──────────────┐   pub/sub   ┌──────────────────────┐    AsyncSession    ┌──────────────┐
-│    Redis     │◀────────────│   FastAPI API        │───────────────────▶│  Postgres    │
-│ (broker +    │             │  app/main.py         │                    │   16         │
-│  pub/sub +   │─────┐       └──────┬───────────────┘                    └──────────────┘
-│  cache +     │     │              │                                            ▲
-│  rate-limit) │     │ broker       │ presigned URLs                             │
-└──────────────┘     │              ▼                                            │
-       ▲             │       ┌──────────────┐                                    │
-       │             │       │   MinIO      │  uploaded files                    │
-       │             ▼       │  (S3-compat) │                                    │
-       │       ┌──────────────────────┐     └──────────────┘                     │
-       └───────│  Celery worker(s)    │                                          │
-               │  - process_upload    │                                          │
-               │  - embed_chunks      │   AsyncSession                           │
-               │  - ai_pipeline       │──────────────────────────────────────────┘
-               │  - notify            │
-               └──────┬───────────────┘
-                      │ HTTP                          HTTP
-                      ▼                               ▼
-              ┌────────────────┐            ┌──────────────────┐
-              │    Qdrant      │            │ unstructured-api │
-              │ chunks +       │            │ (document        │
-              │ questions      │            │  extraction)     │
-              └────────────────┘            └──────────────────┘
+```mermaid
+flowchart LR
+    Web["Web (Vite)<br/>React 19 + Orval"]
+    API["FastAPI API<br/>app/main.py"]
+    Worker["Celery worker(s)<br/>process_upload · embed_chunks<br/>ai_pipeline · notify"]
+    Redis[("Redis<br/>broker · pub/sub<br/>cache · rate-limit")]
+    PG[("Postgres 16")]
+    Minio[("MinIO<br/>S3-compatible")]
+    Qdrant[("Qdrant<br/>chunks + questions")]
+    Unstr["unstructured-api<br/>document extraction"]
+
+    Web -- "REST + SSE" --> API
+    API <-- "pub/sub" --> Redis
+    API <-- "AsyncSession" --> PG
+    API -- "presigned URLs" --> Minio
+    Redis <-- "broker" --> Worker
+    Worker <-- "AsyncSession" --> PG
+    Worker -- "HTTP" --> Qdrant
+    Worker -- "HTTP" --> Unstr
+    Worker -- "S3 client" --> Minio
 ```
 
 All services are defined in `docker-compose.yml`. Healthchecks gate boot order for Postgres, Redis, and MinIO; Qdrant and unstructured-api start without one (the clients retry on first call).
@@ -43,14 +32,65 @@ All services are defined in `docker-compose.yml`. Healthchecks gate boot order f
 
 ### Upload → ready
 
-1. Browser calls `POST /api/v1/uploads` → backend creates `Upload` row, returns a **presigned PUT** for MinIO.
-2. Browser uploads the file **directly** to MinIO (no proxying through the API).
-3. Browser calls `POST /api/v1/uploads/{id}/finalize` → backend enqueues `process_upload`.
-4. `process_upload` (queue `uploads`): pulls the object from S3, calls the extraction dispatcher (`unstructured` by default, `legacy` as fallback), persists `extracted_text` + `extraction_backend` + `extraction_strategy`, then chains into `embed_chunks`.
-5. `embed_chunks` (queue `embeddings`): heading-aware split → contextual summary per chunk → dense (OpenAI) + sparse (BM25) embed → upsert into Qdrant `chunks` collection and write companion rows into `document_chunks`.
-6. Upload status flips to `ready`. Every stage publishes Redis events on `ai:events:{upload_id}`; the browser consumes them via `GET /api/v1/uploads/{id}/events` (SSE).
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant API as FastAPI
+    participant S3 as MinIO
+    participant W as Worker
+    participant Q as Qdrant
+    participant R as Redis
+
+    B->>API: POST /uploads
+    API->>API: insert Upload row
+    API-->>B: { presigned_put_url }
+    B->>S3: PUT file (direct)
+    B->>API: POST /uploads/{id}/finalize
+    API->>R: enqueue process_upload
+    W->>S3: GET file
+    W->>W: extract_document<br/>(unstructured / legacy)
+    W->>R: publish extract.completed
+    W->>R: enqueue embed_chunks
+    W->>W: split → contextualize → embed
+    W->>Q: upsert chunks (dense + sparse)
+    W->>R: publish embed.completed
+    Note over B,R: Browser subscribes via GET /uploads/{id}/events (SSE)
+```
+
+1. `POST /uploads` creates the row and returns a **presigned PUT** for MinIO.
+2. Browser uploads the file **directly** to MinIO (no proxy through the API).
+3. `POST /uploads/{id}/finalize` enqueues `process_upload`.
+4. `process_upload` (queue `uploads`): pulls from S3, calls the extraction dispatcher (`unstructured` by default, `legacy` as fallback), persists `extracted_text` + `extraction_backend` + `extraction_strategy`, chains into `embed_chunks`.
+5. `embed_chunks` (queue `embeddings`): heading-aware split → contextual summary per chunk → dense (OpenAI) + sparse (BM25) embed → upsert into Qdrant `chunks` and companion rows into `document_chunks`.
+6. Upload status flips to `ready`. Every stage publishes events on `ai:events:{upload_id}`; the browser consumes them via SSE.
 
 ### Generate → draft
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant API as FastAPI
+    participant R as Redis
+    participant W as Worker
+    participant Q as Qdrant
+
+    B->>API: POST /uploads/{id}/generate
+    API->>API: validate override, create QuestionSet (generating)
+    API->>R: enqueue orchestrator canvas
+    W->>W: analyze_document
+    W->>W: segment_document
+    par for each section (parallel)
+        W->>Q: HyDE → hybrid_search → rerank
+        W->>W: generate_section (with retrieved context)
+    end
+    W->>W: judge_questions (LLM rubric)
+    W->>Q: embed candidates → search questions (dedup)
+    W->>W: finalize_question_set
+    W->>R: publish draft_ready notification
+    Note over B,R: Browser subscribes via GET /uploads/{id}/events (SSE)
+```
 
 1. Browser calls `POST /api/v1/uploads/{id}/generate` with `count`, `difficulty_mix`, optional `extraction_model_id` / `profile_id` (admin only).
 2. Service validates the override, creates a `QuestionSet` (status `generating`), enqueues the orchestrator canvas.
@@ -58,6 +98,29 @@ All services are defined in `docker-compose.yml`. Healthchecks gate boot order f
 4. `finalize` flips `QuestionSet.status` to `draft`, fires the `draft_ready` notification.
 
 ### Subject Q&A chat
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant B as Browser
+    participant API as FastAPI
+    participant Q as Qdrant
+    participant LLM as LLM Provider
+    participant R as Redis
+
+    B->>API: POST /subjects/{id}/chat/sessions
+    API-->>B: { session_id }
+    B->>API: POST .../sessions/{sid}/messages (user query)
+    API->>LLM: HyDE expand — generate hypothetical answer
+    LLM-->>API: hypothetical answer embedding
+    API->>Q: hybrid_search chunks (filtered to subject)
+    Q-->>API: top-50 candidates
+    API->>LLM: rerank → top-N context chunks
+    LLM-->>API: reranked results
+    API->>LLM: stream reply with [#chunk_id] citation markers
+    LLM-->>B: token-by-token via SSE (subject:chat:{session_id})
+    Note over B,R: UI resolves chunk IDs to excerpts via chunks_by_ids
+```
 
 1. Browser opens an SSE session keyed by `{session_id}` on the subject's chat tab.
 2. Backend's `qa.py` runs HyDE → hybrid search Qdrant `chunks` filtered to the subject → rerank → streams the assistant reply with `[#chunk_id]` citation markers.

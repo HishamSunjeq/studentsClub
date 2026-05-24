@@ -9,6 +9,31 @@ The choice is a single global row in the `extraction_settings` table, edited fro
 
 ## How a document is processed
 
+```mermaid
+flowchart TD
+    Start([process_upload]) --> Cfg
+
+    Cfg["load_extraction_settings\nTTL-cached 60s"]
+    Cfg --> Decision{cfg.backend?}
+
+    Decision -- unstructured --> Unstr
+    Decision -- legacy --> Legacy
+
+    Unstr["POST multipart/form-data\nunstructured-api:8000/general/v0/general\nstrategy · languages · pdf_infer_table_structure"]
+    Unstr --> OK{2xx?}
+    OK -- yes --> Parse["parse element JSON\njoin text in order\nTables → markdown"]
+    OK -- no / timeout --> Fallback["fallback to legacy\nextraction_backend='legacy'"]
+    Fallback --> Legacy
+
+    Legacy["app/ai/parsers.py::extract_text\npdfplumber · python-docx · pytesseract"]
+
+    Parse --> Persist
+    Legacy --> Persist
+
+    Persist["persist\nextracted_text\nextraction_backend\nextraction_strategy"]
+    Persist --> Done([chain → embed_chunks])
+```
+
 1. `process_upload` loads the row via `app/ai/extraction/config.py::load_extraction_settings(db)` (TTL-cached, 60s).
 2. It calls `app/ai/extraction/__init__.py::extract_document(content, content_type, filename, cfg)` — the single entry point.
 3. If `cfg.backend == "unstructured"`:

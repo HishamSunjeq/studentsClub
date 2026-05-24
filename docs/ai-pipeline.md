@@ -4,33 +4,34 @@ The orchestrator turns an `Upload` into a `QuestionSet` through a sequence of sm
 
 ## Stages
 
-```
-generate (user click)
-  │
-  ▼
-analyze_document      app/ai/orchestrator/stages/analyze.py
-  │  → DocumentAnalysis { doc_type, language, sections[], suggested_total_questions }
-  ▼
-segment_document      app/ai/orchestrator/stages/segment.py
-  │  → list[Section]   (heading-aware recursive split, aligned to analyze output)
-  ▼
-group(for each section, in parallel):
-  retrieve_for_section  app/ai/orchestrator/stages/retrieve.py
-    │  HyDE expand → hybrid_search (dense+sparse, RRF) → rerank top-N
-    ▼
-  generate_section      app/ai/orchestrator/stages/generate_section.py
-    │  → list[QuestionDraft] each with source_chunk_ids[]
-  ▼
-judge_questions       app/ai/orchestrator/stages/judge.py
-  │  LLM rubric: clarity, single-correct, distractor quality, factual grounding
-  │  → quality_score; below profile.judge_threshold → auto_rejected=true, is_active=false
-  ▼
-dedupe_questions      app/ai/orchestrator/stages/dedupe.py
-  │  embed candidates → search Qdrant `questions` (subject-scoped, published=true)
-  │  cosine > profile.dedup_threshold → drop
-  ▼
-finalize_question_set app/ai/orchestrator/stages/finalize.py
-     bulk insert questions + choices, status=draft, fire `draft_ready` notification
+```mermaid
+flowchart TD
+    Start([generate — user click]) --> A
+
+    A["analyze_document\napp/ai/orchestrator/stages/analyze.py\n→ DocumentAnalysis { doc_type, language, sections[], suggested_total_questions }"]
+    A --> B
+
+    B["segment_document\napp/ai/orchestrator/stages/segment.py\n→ list[Section]  heading-aware recursive split"]
+    B --> C
+
+    C{"group — for each section, in parallel"}
+    C --> R
+    C --> G
+
+    R["retrieve_for_section\napp/ai/orchestrator/stages/retrieve.py\nHyDE expand → hybrid_search (dense+sparse, RRF) → rerank top-N"]
+    R --> G
+
+    G["generate_section\napp/ai/orchestrator/stages/generate_section.py\n→ list[QuestionDraft] each with source_chunk_ids[]"]
+    G --> J
+
+    J["judge_questions\napp/ai/orchestrator/stages/judge.py\nLLM rubric: clarity · single-correct · distractor quality · factual grounding\n→ quality_score; below judge_threshold → auto_rejected=true"]
+    J --> D
+
+    D["dedupe_questions\napp/ai/orchestrator/stages/dedupe.py\nembed candidates → Qdrant questions search (subject-scoped, published=true)\ncosine > dedup_threshold → drop"]
+    D --> F
+
+    F["finalize_question_set\napp/ai/orchestrator/stages/finalize.py\nbulk insert questions + choices, status=draft\nfire draft_ready notification"]
+    F --> Done([QuestionSet status = draft])
 ```
 
 The canvas is built by `app/ai/orchestrator/graph.py::build_generation_workflow`. The fan-out across sections is a Celery `chord(group(...), callback=judge_questions.s())`.

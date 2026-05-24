@@ -36,6 +36,21 @@ Questions are upserted at publish time and removed on reject / deactivate.
 
 `embed_chunks` chains off `process_upload` and runs:
 
+```mermaid
+flowchart LR
+    Raw["extracted_text\nfrom process_upload"]
+    Split["heading-aware\nrecursive split\nsplitter.py\n300-char floor"]
+    Ctx["contextualize\nHaiku-class LLM\n1-sentence context\nper chunk\ncached by hash"]
+    Dense["dense embed\ntext-embedding-3-small\nbatched ≤100/req\ntelemetry-logged"]
+    Sparse["sparse embed\nBM25 / fastembed\nlocal CPU\nno API call"]
+    Upsert["Qdrant upsert\nmulti-vector point\ndense + sparse"]
+    PG["Postgres insert\ndocument_chunks"]
+
+    Raw --> Split --> Ctx --> Dense --> Upsert
+    Ctx --> Sparse --> Upsert
+    Upsert --> PG
+```
+
 1. **Heading-aware recursive split** (`app/ai/rag/splitter.py`) — Markdown headers → paragraphs → sentences. 300-char floor.
 2. **Contextual retrieval** (`app/ai/rag/contextualize.py`) — for each chunk, a cheap LLM call (Haiku-class by default) produces a 1-sentence context derived from the doc title + section. Prepended to the chunk text before embedding. Cached per `hash(chunk + doc + section)`.
 3. **Dense embed** — `text-embedding-3-small`, batched ≤100/request, retry-with-backoff, telemetry-logged.
@@ -47,6 +62,22 @@ Questions are upserted at publish time and removed on reject / deactivate.
 ## Search
 
 `app/ai/rag/index.py::hybrid_search(subject_id, query_text, k=50, alpha=0.5, filters?)`:
+
+```mermaid
+flowchart LR
+    Query["section title\nor user question"]
+    HyDE["HyDE expand\nLLM generates\nhypothetical answer"]
+    Embed["dense embed\nhypothetical answer"]
+    Dense["Qdrant prefetch\ndense top-200"]
+    Sparse["Qdrant prefetch\nsparse top-200"]
+    RRF["RRF fusion\nQdrant Query API\n→ top-k candidates"]
+    Rerank["reranker\nCohere Rerank v3\nor Voyage rerank-2\n→ top-N context"]
+    Out["context window\npassed to LLM"]
+
+    Query --> HyDE --> Embed --> Dense --> RRF
+    Query --> Sparse --> RRF
+    RRF --> Rerank --> Out
+```
 
 - Server-side **prefetch**: dense top-200 + sparse top-200.
 - **RRF fusion** — Qdrant's built-in Query API combines the two prefetches.
