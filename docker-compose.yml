@@ -23,6 +23,11 @@ services:
       QDRANT_URL: http://qdrant:6333
       # Phase 2 credential store — Fernet (url-safe 32-byte base64). Override in prod.
       AI_CREDENTIAL_KEY: ${AI_CREDENTIAL_KEY:-laOuz-EkAKsMMOH4ZTxBxnzziJH9zGJm5gNdRSmipM8=}
+      # Default admin seeded on first boot when no admin exists.
+      # Override these (especially the password) for any non-local deployment.
+      DEFAULT_ADMIN_EMAIL: ${DEFAULT_ADMIN_EMAIL:-admin@studentsclub.local}
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:-admin12345}
+      DEFAULT_ADMIN_NAME: ${DEFAULT_ADMIN_NAME:-Default Admin}
       S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
       CORS_ORIGINS: '["http://localhost:5173"]'
     ports:
