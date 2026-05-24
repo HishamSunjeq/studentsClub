@@ -254,61 +254,53 @@ def _seed_prompts() -> None:
 
 
 def _seed_models() -> None:
-    models = sa.table(
-        "ai_models",
-        sa.column("provider", sa.Text),
-        sa.column("model_id", sa.Text),
-        sa.column("display_name", sa.Text),
-        sa.column("kind", sa.Text),
-        sa.column("context_window", sa.Integer),
-        sa.column("max_output_tokens", sa.Integer),
-        sa.column("input_cost_per_mtoken", sa.Numeric),
-        sa.column("output_cost_per_mtoken", sa.Numeric),
-        sa.column("supports_streaming", sa.Boolean),
-        sa.column("supports_json_mode", sa.Boolean),
-        sa.column("supports_prompt_cache", sa.Boolean),
-        sa.column("embedding_dim", sa.Integer),
-        sa.column("sort_order", sa.Integer),
+    # asyncpg won't implicitly cast varchar -> ai_model_kind, so the
+    # SQLAlchemy-table bulk_insert path fails. Use raw SQL with an explicit
+    # ::ai_model_kind cast on the parameter.
+    rows = [
+        # Anthropic
+        ("anthropic", "claude-opus-4-7",   "Claude Opus 4.7",   "extraction", 200_000, 8192, 15.0,  75.0, True,  True,  True,  None, 10),
+        ("anthropic", "claude-sonnet-4-6", "Claude Sonnet 4.6", "extraction", 200_000, 8192,  3.0,  15.0, True,  True,  True,  None, 20),
+        ("anthropic", "claude-haiku-4-5",  "Claude Haiku 4.5",  "judge",      200_000, 8192,  1.0,   5.0, True,  True,  True,  None, 30),
+        # OpenAI
+        ("openai",    "gpt-4o",            "GPT-4o",            "extraction", 128_000, 4096,  2.5,  10.0, True,  True,  False, None, 40),
+        ("openai",    "gpt-4o-mini",       "GPT-4o mini",       "judge",      128_000, 4096,  0.15,  0.6, True,  True,  False, None, 50),
+        # Embeddings
+        ("openai",    "text-embedding-3-small", "text-embedding-3-small", "embedding", 8191, 0, 0.02, 0.0, False, False, False, 1536, 60),
+        ("openai",    "text-embedding-3-large", "text-embedding-3-large", "embedding", 8191, 0, 0.13, 0.0, False, False, False, 3072, 70),
+        # Rerankers
+        ("cohere",    "rerank-v3",         "Cohere Rerank v3",  "rerank",   0, 0, 2.0, 0.0, False, False, False, None, 80),
+        ("voyage",    "rerank-2",          "Voyage rerank-2",   "rerank",   0, 0, 5.0, 0.0, False, False, False, None, 90),
+    ]
+    stmt = sa.text(
+        """
+        INSERT INTO ai_models (
+            provider, model_id, display_name, kind,
+            context_window, max_output_tokens,
+            input_cost_per_mtoken, output_cost_per_mtoken,
+            supports_streaming, supports_json_mode, supports_prompt_cache,
+            embedding_dim, sort_order
+        ) VALUES (
+            :provider, :model_id, :display_name, CAST(:kind AS ai_model_kind),
+            :context_window, :max_output_tokens,
+            :input_cost_per_mtoken, :output_cost_per_mtoken,
+            :supports_streaming, :supports_json_mode, :supports_prompt_cache,
+            :embedding_dim, :sort_order
+        )
+        """
     )
-    op.bulk_insert(
-        models,
-        [
-            # Anthropic
-            {"provider": "anthropic", "model_id": "claude-opus-4-7",  "display_name": "Claude Opus 4.7",  "kind": "extraction", "context_window": 200_000, "max_output_tokens": 8192,
-             "input_cost_per_mtoken": 15.0,  "output_cost_per_mtoken": 75.0,
-             "supports_streaming": True, "supports_json_mode": True, "supports_prompt_cache": True, "embedding_dim": None, "sort_order": 10},
-            {"provider": "anthropic", "model_id": "claude-sonnet-4-6", "display_name": "Claude Sonnet 4.6", "kind": "extraction", "context_window": 200_000, "max_output_tokens": 8192,
-             "input_cost_per_mtoken": 3.0,   "output_cost_per_mtoken": 15.0,
-             "supports_streaming": True, "supports_json_mode": True, "supports_prompt_cache": True, "embedding_dim": None, "sort_order": 20},
-            {"provider": "anthropic", "model_id": "claude-haiku-4-5",  "display_name": "Claude Haiku 4.5",  "kind": "judge",      "context_window": 200_000, "max_output_tokens": 8192,
-             "input_cost_per_mtoken": 1.0,   "output_cost_per_mtoken": 5.0,
-             "supports_streaming": True, "supports_json_mode": True, "supports_prompt_cache": True, "embedding_dim": None, "sort_order": 30},
-
-            # OpenAI
-            {"provider": "openai", "model_id": "gpt-4o",       "display_name": "GPT-4o",       "kind": "extraction", "context_window": 128_000, "max_output_tokens": 4096,
-             "input_cost_per_mtoken": 2.5,  "output_cost_per_mtoken": 10.0,
-             "supports_streaming": True, "supports_json_mode": True, "supports_prompt_cache": False, "embedding_dim": None, "sort_order": 40},
-            {"provider": "openai", "model_id": "gpt-4o-mini",  "display_name": "GPT-4o mini",  "kind": "judge",      "context_window": 128_000, "max_output_tokens": 4096,
-             "input_cost_per_mtoken": 0.15, "output_cost_per_mtoken": 0.6,
-             "supports_streaming": True, "supports_json_mode": True, "supports_prompt_cache": False, "embedding_dim": None, "sort_order": 50},
-
-            # Embeddings
-            {"provider": "openai", "model_id": "text-embedding-3-small", "display_name": "text-embedding-3-small", "kind": "embedding", "context_window": 8191, "max_output_tokens": 0,
-             "input_cost_per_mtoken": 0.02, "output_cost_per_mtoken": 0.0,
-             "supports_streaming": False, "supports_json_mode": False, "supports_prompt_cache": False, "embedding_dim": 1536, "sort_order": 60},
-            {"provider": "openai", "model_id": "text-embedding-3-large", "display_name": "text-embedding-3-large", "kind": "embedding", "context_window": 8191, "max_output_tokens": 0,
-             "input_cost_per_mtoken": 0.13, "output_cost_per_mtoken": 0.0,
-             "supports_streaming": False, "supports_json_mode": False, "supports_prompt_cache": False, "embedding_dim": 3072, "sort_order": 70},
-
-            # Rerankers
-            {"provider": "cohere", "model_id": "rerank-v3",  "display_name": "Cohere Rerank v3",  "kind": "rerank", "context_window": 0, "max_output_tokens": 0,
-             "input_cost_per_mtoken": 2.0, "output_cost_per_mtoken": 0.0,
-             "supports_streaming": False, "supports_json_mode": False, "supports_prompt_cache": False, "embedding_dim": None, "sort_order": 80},
-            {"provider": "voyage", "model_id": "rerank-2",   "display_name": "Voyage rerank-2",   "kind": "rerank", "context_window": 0, "max_output_tokens": 0,
-             "input_cost_per_mtoken": 5.0, "output_cost_per_mtoken": 0.0,
-             "supports_streaming": False, "supports_json_mode": False, "supports_prompt_cache": False, "embedding_dim": None, "sort_order": 90},
-        ],
-    )
+    bind = op.get_bind()
+    for r in rows:
+        bind.execute(
+            stmt,
+            {
+                "provider": r[0], "model_id": r[1], "display_name": r[2], "kind": r[3],
+                "context_window": r[4], "max_output_tokens": r[5],
+                "input_cost_per_mtoken": r[6], "output_cost_per_mtoken": r[7],
+                "supports_streaming": r[8], "supports_json_mode": r[9], "supports_prompt_cache": r[10],
+                "embedding_dim": r[11], "sort_order": r[12],
+            },
+        )
 
 
 def _seed_default_profile() -> None:
