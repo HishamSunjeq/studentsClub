@@ -13,12 +13,17 @@ from app.api.v1.router import api_router
 async def lifespan(app: FastAPI):
     configure_logging()
     import structlog
+    from app.db.seed_admin import ensure_default_admin
     from app.services import storage_service
     log = structlog.get_logger()
     try:
         storage_service.ensure_bucket_exists()
     except Exception as exc:
         log.warning("storage_setup_failed", error=str(exc))
+    try:
+        await ensure_default_admin()
+    except Exception as exc:
+        log.warning("default_admin_seed_failed", error=str(exc))
     yield
 
 

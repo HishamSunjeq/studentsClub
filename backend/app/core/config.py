@@ -54,6 +54,15 @@ class Settings(BaseSettings):
     # Empty in dev — credentials feature gracefully degrades to env-only when missing.
     ai_credential_key: str = ""
 
+    # Default admin seeded on first boot if no admin exists. Override the password
+    # in any non-local deployment.
+    default_admin_email: str = "admin@studentsclub.local"
+    default_admin_password: str = "admin12345"
+    default_admin_name: str = "Default Admin"
+    default_admin_college: str = "Administration"
+    default_admin_year: int = 1
+    default_admin_seed_enabled: bool = True
+
     max_upload_bytes: int = 52_428_800
     daily_upload_limit_per_user: int = 10
 
