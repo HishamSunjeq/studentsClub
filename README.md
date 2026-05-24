@@ -1,5 +1,5 @@
 # StudentsClub
-11
+
 An AI-powered study platform. Students upload lecture notes, past papers, and study materials; the platform generates grounded multiple-choice quizzes, supports per-subject Q&A chat, and exposes a full admin control plane for prompts, models, credentials, and retrieval settings.
 
 > ## Work in progress
