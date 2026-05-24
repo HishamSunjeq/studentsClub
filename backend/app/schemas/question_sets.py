@@ -80,6 +80,34 @@ class QuestionChoiceUpdate(BaseModel):
     is_correct: bool
 
 
+class QuestionRegenerateRequest(BaseModel):
+    """Optional RAG context window for regeneration.
+
+    When `chunk_ids` is provided, the AI re-prompt is grounded in the text of
+    those chunks (typically the top-N rerank winners from a preview call).
+    Empty / omitted → falls back to the original `source_excerpt`.
+    """
+
+    chunk_ids: list[UUID] = Field(default_factory=list)
+
+
+class RetrievalPreviewChunk(BaseModel):
+    chunk_id: UUID
+    upload_id: UUID | None
+    section_title: str | None
+    text: str
+    score: float = 0.0
+
+
+class RetrievalPreviewResponse(BaseModel):
+    question_id: UUID
+    query: str
+    hyde: str | None = None
+    chunks: list[RetrievalPreviewChunk] = Field(default_factory=list)
+    degraded: bool = False
+    degraded_reason: str | None = None
+
+
 class QuestionUpdateRequest(BaseModel):
     text: str | None = Field(default=None, min_length=1)
     explanation: str | None = None

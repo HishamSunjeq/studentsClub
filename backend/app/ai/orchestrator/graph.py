@@ -17,6 +17,7 @@ import logging
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai import events as ai_events
 from app.ai.orchestrator.profile import ResolvedProfile, load_profile
@@ -34,6 +35,7 @@ from app.ai.orchestrator.stages.judge import judge_questions
 from app.ai.orchestrator.stages.retrieve import retrieve_for_section
 from app.ai.orchestrator.stages.segment import segment_document
 from app.core.database import AsyncSessionLocal
+from app.models.ai_model import AIModel
 from app.models.question import QuestionSet, QuestionSetStatus
 from app.models.upload import Upload
 
@@ -64,8 +66,8 @@ async def run_generation_workflow(
 
         profile = await load_profile(db, subject_id=qs.subject_id, profile_id=profile_id)
 
-    if settings_overrides:
-        profile = _apply_overrides(profile, settings_overrides)
+        if settings_overrides:
+            profile = await _apply_overrides(db, profile, settings_overrides)
 
     user_id = qs.created_by
     subject_id = qs.subject_id
@@ -161,10 +163,12 @@ async def run_generation_workflow(
     results = await asyncio.gather(*[_section_pipeline(s) for s in sections])
 
     all_candidates: list[CandidateQuestion] = []
+    candidate_section_positions: list[int] = []
     context_by_section: dict[int, RetrievedContext] = {}
     for section, ctx, qs_list in results:
         context_by_section[section.position] = ctx
         all_candidates.extend(qs_list)
+        candidate_section_positions.extend([section.position] * len(qs_list))
 
     if not all_candidates:
         await ai_events.safe_publish(upload_id, {"type": "generate.completed", "kept": 0})
@@ -174,6 +178,7 @@ async def run_generation_workflow(
     judged = await judge_questions(
         profile=profile,
         candidates=all_candidates,
+        candidate_section_positions=candidate_section_positions,
         context_by_section=context_by_section,
         question_set_id=question_set_id,
         user_id=user_id,
@@ -232,20 +237,47 @@ async def run_generation_workflow(
     }
 
 
-def _apply_overrides(profile: ResolvedProfile, overrides: dict) -> ResolvedProfile:
-    """Whitelist override knobs from `settings` (count, credential_alias, model)."""
+async def _apply_overrides(
+    db: AsyncSession, profile: ResolvedProfile, overrides: dict
+) -> ResolvedProfile:
+    """Whitelist override knobs from the generate payload.
+
+    `extraction_model_id` resolves an `ai_models` row and patches
+    provider + model + (optional) credential alias *together*, so picking
+    an OpenAI model never leaves an Anthropic provider string behind.
+    The legacy `model` string key is still honored for back-compat.
+    """
     from dataclasses import replace
 
     patches: dict = {}
-    if "count" in overrides and overrides["count"]:
+
+    if overrides.get("count"):
         try:
             patches["target_count"] = int(overrides["count"])
-        except Exception:
+        except (TypeError, ValueError):
             pass
-    if overrides.get("credential_alias"):
-        patches["extraction_credential_alias"] = overrides["credential_alias"]
-    if overrides.get("model"):
+
+    alias = overrides.get("extraction_credential_alias") or overrides.get(
+        "credential_alias"
+    )
+    if alias:
+        patches["extraction_credential_alias"] = alias
+
+    mid = overrides.get("extraction_model_id")
+    if mid:
+        try:
+            mid_uuid = mid if isinstance(mid, uuid.UUID) else uuid.UUID(str(mid))
+        except (TypeError, ValueError):
+            mid_uuid = None
+        if mid_uuid is not None:
+            res = await db.execute(select(AIModel).where(AIModel.id == mid_uuid))
+            model = res.scalar_one_or_none()
+            if model is not None:
+                patches["extraction_provider"] = model.provider
+                patches["extraction_model"] = model.model_id
+    elif overrides.get("model"):
         patches["extraction_model"] = overrides["model"]
+
     if not patches:
         return profile
     return replace(profile, **patches)

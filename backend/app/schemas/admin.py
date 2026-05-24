@@ -308,3 +308,27 @@ class ChunkResponse(BaseModel):
 
 class ChunkListResponse(BaseModel):
     items: list[ChunkResponse]
+
+
+# ---------- extraction settings (Phase 9) -----------------------------------
+
+
+class ExtractionSettingsResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: uuid.UUID
+    backend: str
+    strategy: str
+    ocr_languages: list[str]
+    extract_tables: bool
+    hi_res_model_name: str | None
+    max_characters: int | None
+    updated_at: datetime
+
+
+class ExtractionSettingsUpdateRequest(BaseModel):
+    backend: Literal["unstructured", "legacy"] | None = None
+    strategy: Literal["auto", "hi_res", "ocr_only", "fast"] | None = None
+    ocr_languages: list[str] | None = None
+    extract_tables: bool | None = None
+    hi_res_model_name: str | None = None
+    max_characters: int | None = None

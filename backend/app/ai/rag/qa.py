@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.credentials import resolve as resolve_credential
+from app.ai.events import safe_publish_chat
 from app.ai.orchestrator.profile import ResolvedProfile, load_profile
 from app.ai.prompts_registry import get_active_prompt
 from app.ai.rag.embedder.factory import get_embedder
@@ -75,19 +76,32 @@ async def answer_subject_question(
     query: str,
     history: list[dict[str, str]] | None = None,
     user_id: uuid.UUID | None = None,
+    session_id: uuid.UUID | None = None,
 ) -> AnswerResult:
     profile = await load_profile(db, subject_id=subject_id)
     history = history or []
 
+    if session_id is not None:
+        await safe_publish_chat(session_id, {"type": "retrieve.started"})
+
     hits = await _retrieve(db, profile=profile, subject_id=subject_id, query=query)
 
-    if not hits:
-        return AnswerResult(
-            answer=(
-                "I couldn't find anything in this subject's material to answer "
-                "that. Try rephrasing, or upload more notes for this subject."
-            )
+    if session_id is not None:
+        await safe_publish_chat(
+            session_id, {"type": "retrieve.completed", "hits": len(hits)}
         )
+
+    if not hits:
+        answer = (
+            "I couldn't find anything in this subject's material to answer "
+            "that. Try rephrasing, or upload more notes for this subject."
+        )
+        if session_id is not None:
+            await safe_publish_chat(session_id, {"type": "token", "delta": answer})
+            await safe_publish_chat(
+                session_id, {"type": "done", "citations": []}
+            )
+        return AnswerResult(answer=answer)
 
     context = "\n\n".join(
         f"[#{h.chunk_id}] ({h.section_title or 'untitled'})\n{h.text or ''}"
@@ -108,11 +122,10 @@ async def answer_subject_question(
         answer = (
             f"Based on the subject material:\n\n{(top.text or '').strip()[:600]}"
         )
-        return AnswerResult(
-            answer=answer,
-            citations=_citations_from_hits(hits[:3]),
-            model=model,
-        )
+        citations = _citations_from_hits(hits[:3])
+        if session_id is not None:
+            await _stream_mock(session_id, answer, citations)
+        return AnswerResult(answer=answer, citations=citations, model=model)
 
     messages = _build_messages(history=history, context=context, query=query)
 
@@ -124,14 +137,61 @@ async def answer_subject_question(
         system_prompt=system_prompt,
         messages=messages,
         user_id=user_id,
+        session_id=session_id,
     )
 
     citations = _resolve_citations(answer_text, hits)
+    if session_id is not None:
+        await safe_publish_chat(
+            session_id,
+            {
+                "type": "done",
+                "citations": [
+                    {
+                        "chunk_id": str(c.chunk_id),
+                        "upload_id": str(c.upload_id) if c.upload_id else None,
+                        "section_title": c.section_title,
+                        "text": c.text,
+                    }
+                    for c in citations
+                ],
+            },
+        )
     return AnswerResult(
         answer=answer_text.strip(),
         citations=citations,
         tokens=tokens,
         model=model,
+    )
+
+
+async def _stream_mock(
+    session_id: uuid.UUID, answer: str, citations: list[Citation]
+) -> None:
+    """Emit the fallback answer as a few token chunks so the SSE UX is exercisable
+    without a live provider key."""
+    import asyncio
+
+    chunk_size = max(1, len(answer) // 12)
+    for i in range(0, len(answer), chunk_size):
+        await safe_publish_chat(
+            session_id, {"type": "token", "delta": answer[i : i + chunk_size]}
+        )
+        await asyncio.sleep(0.05)
+    await safe_publish_chat(
+        session_id,
+        {
+            "type": "done",
+            "citations": [
+                {
+                    "chunk_id": str(c.chunk_id),
+                    "upload_id": str(c.upload_id) if c.upload_id else None,
+                    "section_title": c.section_title,
+                    "text": c.text,
+                }
+                for c in citations
+            ],
+        },
     )
 
 
@@ -268,6 +328,7 @@ async def _complete(
     system_prompt: str,
     messages: list[dict[str, str]],
     user_id: uuid.UUID | None,
+    session_id: uuid.UUID | None = None,
 ) -> tuple[str, int]:
     cred = await resolve_credential(db, provider=provider, alias=credential_alias)
 
@@ -283,6 +344,30 @@ async def _complete(
             import anthropic
 
             client = anthropic.AsyncAnthropic(api_key=cred.api_key)
+            if session_id is not None:
+                # Streaming path — emit each delta to SSE as it arrives.
+                pieces: list[str] = []
+                input_tokens = 0
+                output_tokens = 0
+                async with client.messages.stream(
+                    model=model,
+                    max_tokens=1024,
+                    system=system_prompt,
+                    messages=messages,  # type: ignore[arg-type]
+                ) as stream:
+                    async for text in stream.text_stream:
+                        if text:
+                            pieces.append(text)
+                            await safe_publish_chat(
+                                session_id, {"type": "token", "delta": text}
+                            )
+                    final = await stream.get_final_message()
+                    if final.usage:
+                        input_tokens = final.usage.input_tokens
+                        output_tokens = final.usage.output_tokens
+                tel.record_tokens(input_tokens, output_tokens)
+                return "".join(pieces), input_tokens + output_tokens
+
             resp = await client.messages.create(
                 model=model,
                 max_tokens=1024,
@@ -296,6 +381,31 @@ async def _complete(
         from openai import AsyncOpenAI
 
         client = AsyncOpenAI(api_key=cred.api_key)
+        if session_id is not None:
+            pieces: list[str] = []
+            stream = await client.chat.completions.create(
+                model=model,
+                max_tokens=1024,
+                messages=[{"role": "system", "content": system_prompt}, *messages],  # type: ignore[arg-type]
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+            input_tokens = 0
+            output_tokens = 0
+            async for chunk in stream:
+                if chunk.choices:
+                    delta = chunk.choices[0].delta.content or ""
+                    if delta:
+                        pieces.append(delta)
+                        await safe_publish_chat(
+                            session_id, {"type": "token", "delta": delta}
+                        )
+                if chunk.usage:
+                    input_tokens = chunk.usage.prompt_tokens
+                    output_tokens = chunk.usage.completion_tokens
+            tel.record_tokens(input_tokens, output_tokens)
+            return "".join(pieces), input_tokens + output_tokens
+
         resp = await client.chat.completions.create(
             model=model,
             max_tokens=1024,

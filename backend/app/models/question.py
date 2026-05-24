@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import Boolean, Enum, ForeignKey, Index, Integer, Numeric, SmallInteger, Text
+from sqlalchemy import text as sa_text
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -97,7 +98,7 @@ class Question(UUIDMixin, TimestampMixin, Base):
         ARRAY(UUID(as_uuid=True)),
         nullable=False,
         default=list,
-        server_default="ARRAY[]::uuid[]",
+        server_default=sa_text("'{}'::uuid[]"),
     )
     prompt_version_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), nullable=True

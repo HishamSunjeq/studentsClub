@@ -56,7 +56,7 @@ def upgrade() -> None:
             "source_chunk_ids",
             postgresql.ARRAY(postgresql.UUID(as_uuid=True)),
             nullable=False,
-            server_default=sa.text("ARRAY[]::uuid[]"),
+            server_default=sa.text("'{}'::uuid[]"),
         ),
     )
     op.add_column(

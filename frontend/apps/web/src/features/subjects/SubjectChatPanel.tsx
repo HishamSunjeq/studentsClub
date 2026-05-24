@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -16,6 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import {
+  useSubjectChat,
+  type ChatStreamCitation,
+} from "./useSubjectChat";
 
 export function SubjectChatPanel({
   subjectId,
@@ -27,6 +31,8 @@ export function SubjectChatPanel({
   const queryClient = useQueryClient();
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [streamingFor, setStreamingFor] = useState<string | null>(null);
+  const [pendingUserText, setPendingUserText] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: sessionsData } = useSubjectChatSessionsList(subjectId, {
@@ -43,6 +49,20 @@ export function SubjectChatPanel({
   const createSession = useSubjectChatSessionsCreate();
   const send = useSubjectChatSend();
   const busy = createSession.isPending || send.isPending;
+
+  const stream = useSubjectChat(
+    subjectId,
+    streamingFor,
+    streamingFor !== null,
+  );
+
+  useEffect(() => {
+    if (!stream.streaming && streamingFor && pendingUserText === null) {
+      // Stream terminated — clear our local streaming bubble so the persisted
+      // assistant message (refetched by the send mutation) takes over.
+      setStreamingFor(null);
+    }
+  }, [stream.streaming, streamingFor, pendingUserText]);
 
   function invalidateSessions() {
     void queryClient.invalidateQueries({
@@ -65,7 +85,12 @@ export function SubjectChatPanel({
         setActiveSessionId(sessionId);
         invalidateSessions();
       }
+      // Surface the user turn + start the SSE subscription before the POST
+      // resolves so tokens stream into the UI as the backend produces them.
+      setPendingUserText(content);
+      setStreamingFor(sessionId);
       await send.mutateAsync({ subjectId, sessionId, data: { content } });
+      setPendingUserText(null);
       void queryClient.invalidateQueries({
         queryKey: getSubjectChatMessagesListQueryKey(subjectId, sessionId),
       });
@@ -76,6 +101,8 @@ export function SubjectChatPanel({
     } catch {
       toast.error("Couldn't get an answer. Try again.");
       setDraft(content);
+      setPendingUserText(null);
+      setStreamingFor(null);
     }
   }
 
@@ -150,13 +177,22 @@ export function SubjectChatPanel({
               <Skeleton className="ml-auto h-16 w-2/3 rounded-lg" />
             </div>
           ) : (
-            messages.map((m) => <MessageBubble key={m.id} message={m} />)
-          )}
-          {send.isPending && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" />
-              Searching the material…
-            </div>
+            <>
+              {messages.map((m) => (
+                <MessageBubble key={m.id} message={m} />
+              ))}
+              {pendingUserText && (
+                <PendingUserBubble text={pendingUserText} />
+              )}
+              {streamingFor && (
+                <StreamingAssistantBubble
+                  text={stream.text}
+                  retrieving={stream.retrieving}
+                  done={!stream.streaming}
+                  citations={stream.citations}
+                />
+              )}
+            </>
           )}
         </div>
 
@@ -192,6 +228,67 @@ export function SubjectChatPanel({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PendingUserBubble({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col items-end gap-2">
+      <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function StreamingAssistantBubble({
+  text,
+  retrieving,
+  done,
+  citations,
+}: {
+  text: string;
+  retrieving: boolean;
+  done: boolean;
+  citations: ChatStreamCitation[];
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl border border-border bg-card px-4 py-2.5 font-study text-sm text-foreground">
+        {!text && retrieving && (
+          <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" />
+            Searching the material…
+          </span>
+        )}
+        {!text && !retrieving && !done && (
+          <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+            <Loader2 className="size-3.5 animate-spin" />
+            Thinking…
+          </span>
+        )}
+        {text}
+        {!done && text && (
+          <span className="ml-0.5 inline-block h-3.5 w-1 animate-pulse bg-foreground/40 align-middle" />
+        )}
+      </div>
+      {done && citations.length > 0 && (
+        <div className="flex max-w-[85%] flex-wrap gap-1.5">
+          {citations.map((c, i) => (
+            <CitationChip
+              key={c.chunk_id}
+              citation={{
+                chunk_id: c.chunk_id,
+                upload_id: c.upload_id ?? null,
+                section_title: c.section_title ?? null,
+                text: c.text,
+              }}
+              index={i + 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

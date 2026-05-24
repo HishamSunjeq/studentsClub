@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { useAdminAiMetricsGet } from "@/api/generated/endpoints/admin/admin";
 import type {
   MetricPoint,
@@ -11,7 +12,7 @@ const RANGES = [7, 30, 90];
 
 export default function AIDashboardPage() {
   const [range, setRange] = useState(30);
-  const { data, isLoading } = useAdminAiMetricsGet({ range });
+  const { data, isLoading, error } = useAdminAiMetricsGet({ range });
 
   return (
     <div className="space-y-6">
@@ -32,7 +33,20 @@ export default function AIDashboardPage() {
         ))}
       </div>
 
-      {isLoading || !data ? (
+      {error ? (
+        <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-sm">
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+          <div className="space-y-1">
+            <p className="font-medium text-destructive">
+              Failed to load AI metrics
+            </p>
+            <p className="text-muted-foreground">
+              The metrics endpoint returned an error. Telemetry may be empty,
+              or the aggregation query failed — check API logs.
+            </p>
+          </div>
+        </div>
+      ) : isLoading || !data ? (
         <Skeleton className="h-96 rounded-xl" />
       ) : (
         <>

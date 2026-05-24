@@ -66,3 +66,5 @@ class Upload(UUIDMixin, TimestampMixin, Base):
         nullable=True,
     )
     extraction_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_backend: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extraction_strategy: Mapped[str | None] = mapped_column(Text, nullable=True)

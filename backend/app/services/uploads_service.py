@@ -261,7 +261,11 @@ async def generate_questions(
             or "Daily token budget exhausted; please try again later.",
         )
 
-    settings_dict: dict[str, Any] = payload.model_dump()
+    # Admin-only per-run overrides: validate before queueing.
+    if payload.extraction_model_id is not None or payload.profile_id is not None:
+        await _validate_overrides(db=db, user=user, payload=payload)
+
+    settings_dict: dict[str, Any] = payload.model_dump(mode="json")
 
     qs = QuestionSet(
         upload_id=upload.id,
@@ -284,6 +288,133 @@ async def generate_questions(
     generate_task.delay(str(qs.id), settings_dict)
 
     return GenerateResponse(question_set_id=qs.id, status=qs.status)
+
+
+async def get_generation_defaults(
+    *, db: AsyncSession, upload_id: uuid.UUID, user: User
+):
+    """Resolve which extraction model/profile would run for this upload.
+
+    Everyone gets the resolved line; admins also get the selectable
+    active extraction models + profiles for a per-run override.
+    """
+    from app.ai.orchestrator.profile import load_profile
+    from app.models.ai_model import AIModel, ModelKind
+    from app.models.generation_profile import GenerationProfile
+    from app.models.user import UserRole
+    from app.schemas.uploads import (
+        GenerationDefaultsResponse,
+        GenerationModelOption,
+        GenerationProfileOption,
+    )
+
+    upload = await get_upload(db=db, upload_id=upload_id, user=user)
+    profile = await load_profile(db, subject_id=upload.subject_id, profile_id=None)
+
+    # Display name for the resolved extraction model, if it's in the registry.
+    res = await db.execute(
+        select(AIModel).where(
+            AIModel.provider == profile.extraction_provider,
+            AIModel.model_id == profile.extraction_model,
+        )
+    )
+    model_row = res.scalar_one_or_none()
+    display = model_row.display_name if model_row else profile.extraction_model
+
+    is_admin = user.role == UserRole.admin
+    models: list[GenerationModelOption] = []
+    profiles: list[GenerationProfileOption] = []
+    if is_admin:
+        res = await db.execute(
+            select(AIModel)
+            .where(
+                AIModel.kind == ModelKind.extraction,
+                AIModel.is_active.is_(True),
+            )
+            .order_by(AIModel.sort_order.asc(), AIModel.model_id.asc())
+        )
+        models = [
+            GenerationModelOption(
+                id=m.id,
+                display_name=m.display_name,
+                model_id=m.model_id,
+                provider=m.provider,
+            )
+            for m in res.scalars().all()
+        ]
+        res = await db.execute(
+            select(GenerationProfile).order_by(GenerationProfile.name.asc())
+        )
+        profiles = [
+            GenerationProfileOption(
+                id=p.id,
+                name=p.name,
+                subject_id=p.subject_id,
+                is_default=p.is_default,
+            )
+            for p in res.scalars().all()
+        ]
+
+    return GenerationDefaultsResponse(
+        profile_id=profile.profile_id,
+        profile_name=profile.name,
+        extraction_provider=profile.extraction_provider,
+        extraction_model=profile.extraction_model,
+        extraction_model_display=display,
+        is_admin=is_admin,
+        models=models,
+        profiles=profiles,
+    )
+
+
+async def _validate_overrides(
+    *, db: AsyncSession, user: User, payload: GenerateRequest
+) -> None:
+    """Per-run model/profile overrides are admin-only and must point at
+    real, active rows. Raises 403/422 otherwise.
+    """
+    from app.models.ai_model import AIModel, ModelKind
+    from app.models.generation_profile import GenerationProfile
+    from app.models.user import UserRole
+
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only admins can override the model or profile per run.",
+        )
+
+    if payload.extraction_model_id is not None:
+        res = await db.execute(
+            select(AIModel).where(AIModel.id == payload.extraction_model_id)
+        )
+        model = res.scalar_one_or_none()
+        if model is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="extraction_model_id does not exist.",
+            )
+        if model.kind != ModelKind.extraction:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Selected model is not an extraction model.",
+            )
+        if not model.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Selected model is inactive.",
+            )
+
+    if payload.profile_id is not None:
+        res = await db.execute(
+            select(GenerationProfile).where(
+                GenerationProfile.id == payload.profile_id
+            )
+        )
+        if res.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="profile_id does not exist.",
+            )
 
 
 # ---------- Helpers ----------

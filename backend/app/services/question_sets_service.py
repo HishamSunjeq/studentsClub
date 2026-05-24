@@ -268,12 +268,21 @@ async def update_question(
 
 
 async def regenerate_question(
-    *, db: AsyncSession, question_id: uuid.UUID, user: User
+    *,
+    db: AsyncSession,
+    question_id: uuid.UUID,
+    user: User,
+    chunk_ids: list[uuid.UUID] | None = None,
 ) -> Question:
-    """Regenerate a single question in-place via the AI provider, reusing the
-    original source_excerpt as the input chunk so the new question stays anchored
-    to the same study material."""
+    """Regenerate a single question in-place via the AI provider.
+
+    When `chunk_ids` is provided, those chunks are concatenated as the RAG
+    context window so the re-prompt is grounded in (potentially different)
+    material than the original draft. Otherwise we fall back to the original
+    `source_excerpt`.
+    """
     from app.ai.factory import get_provider
+    from app.models.document_chunk import DocumentChunk
 
     question = await db.get(Question, question_id)
     if question is None:
@@ -284,13 +293,30 @@ async def regenerate_question(
     if qs.status != QuestionSetStatus.draft:
         raise ConflictError(f"Cannot edit a {qs.status.value} question set")
 
-    seed = question.source_excerpt or question.text
-    if not seed:
-        raise ConflictError("Question has no source to regenerate from")
+    seeds: list[str] = []
+    new_chunk_ids: list[uuid.UUID] = []
+    if chunk_ids:
+        rows = (
+            await db.execute(
+                select(DocumentChunk).where(DocumentChunk.id.in_(chunk_ids))
+            )
+        ).scalars().all()
+        by_id = {r.id: r for r in rows}
+        for cid in chunk_ids:
+            row = by_id.get(cid)
+            if row and row.text:
+                seeds.append(row.text)
+                new_chunk_ids.append(row.id)
+
+    if not seeds:
+        fallback = question.source_excerpt or question.text
+        if not fallback:
+            raise ConflictError("Question has no source to regenerate from")
+        seeds = [fallback]
 
     provider = get_provider()
     result = await provider.extract_questions(
-        [seed], source_type="study_material", target_count=1
+        seeds, source_type="study_material", target_count=1
     )
     if not result.questions:
         raise ConflictError("AI returned no candidate question")
@@ -299,6 +325,8 @@ async def regenerate_question(
     question.text = draft.text
     question.explanation = draft.explanation
     question.difficulty = draft.difficulty
+    if new_chunk_ids:
+        question.source_chunk_ids = new_chunk_ids
 
     # Replace all choices with the new draft's choices
     existing = list(
@@ -320,6 +348,42 @@ async def regenerate_question(
         )
     await db.flush()
     return question
+
+
+async def retrieval_preview_for_question(
+    *, db: AsyncSession, question_id: uuid.UUID, user: User
+):
+    """Run the RAG retrieve stage with the question's current text as the query.
+
+    Returns the top reranked chunks the user can choose to regenerate against.
+    Imported lazily to avoid circular deps with the orchestrator at module load.
+    """
+    from app.ai.orchestrator.profile import load_profile
+    from app.ai.orchestrator.schemas import Section
+    from app.ai.orchestrator.stages.retrieve import retrieve_for_section
+
+    question = await db.get(Question, question_id)
+    if question is None:
+        raise NotFoundError("Question")
+    qs = await _get_qs_or_404(db, question.question_set_id)
+    if qs.created_by != user.id:
+        raise ForbiddenError("Not your question")
+
+    profile = await load_profile(db, subject_id=qs.subject_id)
+    section = Section(
+        position=question.position,
+        title=question.text[:120],
+        text=question.text + "\n\n" + (question.explanation or ""),
+        target_questions=1,
+    )
+    return await retrieve_for_section(
+        profile=profile,
+        section=section,
+        subject_id=qs.subject_id,
+        upload_id=qs.upload_id,
+        question_set_id=qs.id,
+        user_id=user.id,
+    )
 
 
 async def deactivate_question(

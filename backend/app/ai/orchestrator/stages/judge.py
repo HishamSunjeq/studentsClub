@@ -42,17 +42,45 @@ async def judge_questions(
     profile: ResolvedProfile,
     candidates: list[CandidateQuestion],
     context_by_section: dict[int, RetrievedContext],
+    candidate_section_positions: list[int] | None = None,
     question_set_id: uuid.UUID,
     user_id: uuid.UUID | None,
     parent_run_id: uuid.UUID | None = None,
 ) -> list[JudgedQuestion]:
     if not candidates:
         return []
+
+    # Per-section degradation penalty: subtract from the final score for any
+    # candidate produced from a section whose retrieval was degraded (no chunks,
+    # embed failed, hybrid search failed, etc.). Floor at 0.
+    degraded_positions = {
+        pos for pos, ctx in context_by_section.items() if ctx.degraded
+    }
+    positions = candidate_section_positions or [-1] * len(candidates)
+
+    def _apply_degradation_penalty(
+        idx: int, score: float, notes: str | None
+    ) -> tuple[float, bool, str | None]:
+        if positions[idx] in degraded_positions:
+            penalized = max(0.0, score - 2.0)
+            extra = "retrieval degraded"
+            new_notes = f"{notes}; {extra}" if notes else extra
+            return penalized, penalized < profile.judge_threshold, new_notes
+        return score, score < profile.judge_threshold, notes
+
     if profile.judge_provider == "mock":
-        return [
-            JudgedQuestion(question=c, quality_score=8.0, auto_rejected=False)
-            for c in candidates
-        ]
+        out: list[JudgedQuestion] = []
+        for i, c in enumerate(candidates):
+            score, rejected, notes = _apply_degradation_penalty(i, 8.0, None)
+            out.append(
+                JudgedQuestion(
+                    question=c,
+                    quality_score=score,
+                    auto_rejected=rejected,
+                    judge_notes=notes,
+                )
+            )
+        return out
 
     # Build a chunk lookup so the judge sees what was cited.
     chunk_text_by_id: dict[uuid.UUID, str] = {}
@@ -107,15 +135,16 @@ async def judge_questions(
             continue
         score = float(s.get("score", 0))
         grounded = bool(s.get("grounded", True))
-        rejected = score < profile.judge_threshold or (
-            not grounded and len(c.source_chunk_ids) > 0
-        )
+        notes = str(s.get("notes") or "") or None
+        score, rejected, notes = _apply_degradation_penalty(i, score, notes)
+        if not grounded and len(c.source_chunk_ids) > 0:
+            rejected = True
         judged.append(
             JudgedQuestion(
                 question=c,
                 quality_score=score,
                 auto_rejected=rejected,
-                judge_notes=str(s.get("notes") or "") or None,
+                judge_notes=notes,
             )
         )
     return judged

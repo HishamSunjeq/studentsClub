@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     qdrant_api_key: str = ""
     qdrant_prefer_grpc: bool = False
 
+    # Document extraction (Phase 9). `extraction_backend` is the fallback used
+    # when no `extraction_settings` row exists; the DB row takes precedence.
+    unstructured_api_url: str = "http://localhost:8001"
+    extraction_backend: str = "unstructured"  # or "legacy"
+
     # AI cost guardrails (Phase 1).
     user_daily_token_budget: int = 500_000
     qs_max_tokens: int = 200_000
@@ -56,7 +61,7 @@ class Settings(BaseSettings):
 
     # Default admin seeded on first boot if no admin exists. Override the password
     # in any non-local deployment.
-    default_admin_email: str = "admin@studentsclub.local"
+    default_admin_email: str = "admin@studentsclub.io"
     default_admin_password: str = "admin12345"
     default_admin_name: str = "Default Admin"
     default_admin_college: str = "Administration"

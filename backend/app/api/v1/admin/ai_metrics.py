@@ -11,7 +11,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from fastapi import APIRouter, Query
-from sqlalchemy import Numeric, cast, func, select
+from sqlalchemy import case, func, select
 
 from app.api.deps import AdminUser, DBSession
 from app.models.ai_run import AIRun
@@ -51,7 +51,7 @@ async def ai_metrics(
         func.count(),
         func.coalesce(func.sum(AIRun.input_tokens), 0),
         func.coalesce(func.sum(AIRun.output_tokens), 0),
-        func.coalesce(func.sum(cast(AIRun.cache_hit, Numeric)), 0),
+        func.coalesce(func.sum(case((AIRun.cache_hit, 1), else_=0)), 0),
     ).where(AIRun.created_at >= since)
     total_cost, total_calls, total_in, total_out, cache_hits = (
         await db.execute(totals_q)
@@ -75,7 +75,7 @@ async def ai_metrics(
             func.coalesce(func.sum(AIRun.input_tokens), 0),
             func.coalesce(func.sum(AIRun.output_tokens), 0),
             func.count(),
-            func.coalesce(func.sum(cast(AIRun.cache_hit, Numeric)), 0),
+            func.coalesce(func.sum(case((AIRun.cache_hit, 1), else_=0)), 0),
         )
         .where(AIRun.created_at >= since)
         .group_by(day_col)

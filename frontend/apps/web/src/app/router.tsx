@@ -44,6 +44,7 @@ const CredentialsPage = lazy(() => import("@/features/admin/CredentialsPage"));
 const ModelsPage = lazy(() => import("@/features/admin/ModelsPage"));
 const PromptsPage = lazy(() => import("@/features/admin/PromptsPage"));
 const ProfilesPage = lazy(() => import("@/features/admin/ProfilesPage"));
+const ExtractionPage = lazy(() => import("@/features/admin/ExtractionPage"));
 
 // Dev only
 const ComponentsShowcasePage = lazy(
@@ -108,6 +109,7 @@ export function AppRouter() {
             <Route path="models" element={<ModelsPage />} />
             <Route path="prompts" element={<PromptsPage />} />
             <Route path="profiles" element={<ProfilesPage />} />
+            <Route path="extraction" element={<ExtractionPage />} />
           </Route>
         </Route>
 

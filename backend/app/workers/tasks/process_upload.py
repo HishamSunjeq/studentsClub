@@ -26,7 +26,8 @@ def run(self, upload_id: str) -> dict:  # type: ignore[return]
 async def _async_run(upload_id: str) -> dict:
     from sqlalchemy import select
 
-    from app.ai.parsers import extract_text
+    from app.ai.extraction import extract_document
+    from app.ai.extraction.config import load_extraction_settings
     from app.core.database import AsyncSessionLocal
     from app.models.upload import Upload, UploadStatus
     from app.services import storage_service
@@ -41,9 +42,11 @@ async def _async_run(upload_id: str) -> dict:
 
         s3_key = upload.s3_key
         content_type = upload.content_type
+        filename = upload.original_filename
 
+    cfg = await load_extraction_settings()
     content = storage_service.download_file(s3_key)
-    text = extract_text(content, content_type)
+    text, backend_used = await extract_document(content, content_type, filename, cfg)
 
     if not text.strip():
         raise ValueError(f"No text extracted from upload {upload_id}")
@@ -57,6 +60,8 @@ async def _async_run(upload_id: str) -> dict:
             upload.extracted_text = text
             upload.extracted_at = datetime.now(UTC)
             upload.extraction_error = None
+            upload.extraction_backend = backend_used
+            upload.extraction_strategy = cfg.strategy if backend_used == "unstructured" else None
             upload.status = UploadStatus.ready
 
     # Phase 3: chain into the RAG embedding pipeline. Best-effort dispatch —

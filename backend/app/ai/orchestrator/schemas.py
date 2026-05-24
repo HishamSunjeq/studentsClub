@@ -37,6 +37,8 @@ class RetrievedContext(BaseModel):
     query: str
     hyde: str | None = None
     chunks: list[RetrievedChunk] = Field(default_factory=list)
+    degraded: bool = False
+    degraded_reason: str | None = None
 
 
 class CandidateQuestion(BaseModel):
