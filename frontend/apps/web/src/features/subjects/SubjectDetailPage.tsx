@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { BookOpen, ChevronLeft, Trophy, Users } from "lucide-react";
+import { BookOpen, ChevronLeft, MessageSquare, Trophy, Users } from "lucide-react";
 import {
   getSubjectsListMineQueryKey,
   useSubjectsEnroll,
@@ -23,6 +23,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { SubjectChatPanel } from "./SubjectChatPanel";
 
 export default function SubjectDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -188,6 +189,10 @@ export default function SubjectDetailPage() {
           <TabsTrigger value="sets">Question Sets</TabsTrigger>
           <TabsTrigger value="members">Members</TabsTrigger>
           <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+          <TabsTrigger value="chat" className="gap-1.5">
+            <MessageSquare className="size-3.5" strokeWidth={1.5} />
+            Chat
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview tab */}
@@ -433,6 +438,11 @@ export default function SubjectDetailPage() {
               );
             })
           )}
+        </TabsContent>
+
+        {/* Chat tab */}
+        <TabsContent value="chat" className="mt-6">
+          <SubjectChatPanel subjectId={id!} enrolled={enrolled} />
         </TabsContent>
       </Tabs>
     </div>
