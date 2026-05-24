@@ -21,6 +21,8 @@ services:
       S3_SECRET_KEY: minio12345
       AI_PROVIDER: mock
       QDRANT_URL: http://qdrant:6333
+      # Phase 2 credential store — Fernet (url-safe 32-byte base64). Override in prod.
+      AI_CREDENTIAL_KEY: ${AI_CREDENTIAL_KEY:-laOuz-EkAKsMMOH4ZTxBxnzziJH9zGJm5gNdRSmipM8=}
       S3_PUBLIC_ENDPOINT_URL: http://localhost:9000
       CORS_ORIGINS: '["http://localhost:5173"]'
     ports:
@@ -30,6 +32,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
     volumes:
       - ./backend:/app
     restart: unless-stopped
@@ -55,9 +61,18 @@ services:
       S3_SECRET_KEY: minio12345
       AI_PROVIDER: mock
       QDRANT_URL: http://qdrant:6333
+      AI_CREDENTIAL_KEY: ${AI_CREDENTIAL_KEY:-laOuz-EkAKsMMOH4ZTxBxnzziJH9zGJm5gNdRSmipM8=}
+      # Worker is a consumer — don't re-run migrations from here.
+      RUN_MIGRATIONS: "0"
     depends_on:
-      - api
-      - qdrant
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      api:
+        condition: service_started
     volumes:
       - ./backend:/app
     restart: unless-stopped
@@ -116,6 +131,8 @@ services:
       - "6334:6334"
     volumes:
       - qdrant_data:/qdrant/storage
+    # The qdrant image is minimal (no curl/wget) so we can't easily
+    # exec a healthcheck. Boot is ~2s; client retries cover the race.
     restart: unless-stopped
 
   # ── MinIO (S3-compatible storage) ─────────────────────────────────────────
@@ -131,6 +148,12 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
 volumes:
