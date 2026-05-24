@@ -1,6 +1,53 @@
+# OS / editor
 .DS_Store
 *.local
-
-# Editor / tooling
 .vscode/
 .claude/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Frontend build output
+dist/
+build/
+.next/
+.nuxt/
+.turbo/
+.vite/
+.cache/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.venv/
+venv/
+env/
+
+# Env files (real secrets — keep .env.example tracked)
+.env
+.env.*
+!.env.example
+
+# Logs / tmp
+*.log
+*.tmp
+*.swp
+
+# Docker / data volumes (when bind-mounted locally)
+postgres_data/
+redis_data/
+minio_data/
+qdrant_data/
