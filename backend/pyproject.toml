@@ -9,7 +9,7 @@ dependencies = [
     "fastapi==0.118.0",
     "uvicorn[standard]==0.34.0",
     "gunicorn==23.0.0",
-    "python-multipart==0.0.20",
+    "python-multipart==0.0.27",
 
     # Validation / settings
     "pydantic==2.10.4",
@@ -33,11 +33,11 @@ dependencies = [
     "boto3==1.35.90",
 
     # File parsing
-    "pypdf==5.1.0",
+    "pypdf==6.10.2",
     "pdfplumber==0.11.4",
     "python-docx==1.1.2",
     "pytesseract==0.3.13",
-    "Pillow==11.0.0",
+    "Pillow==12.2.0",
 
     # AI providers
     "anthropic==0.42.0",
@@ -52,7 +52,7 @@ dependencies = [
     "fastembed==0.6.1",
 
     # Credential encryption (Phase 2)
-    "cryptography==44.0.0",
+    "cryptography==46.0.7",
 
     # Logging / observability
     "structlog==24.4.0",
@@ -63,7 +63,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest==8.3.4",
+    "pytest==9.0.3",
     "pytest-asyncio==0.25.0",
     "pytest-cov==6.0.0",
     "factory-boy==3.3.1",
