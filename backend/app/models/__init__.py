@@ -3,6 +3,7 @@ from app.models.ai_model import AIModel, ModelKind
 from app.models.ai_prompt import AIPrompt
 from app.models.ai_run import AIRun, AIRunStatus
 from app.models.auth_tokens import EmailVerificationToken, PasswordResetToken, RefreshToken
+from app.models.chat import ChatMessage, ChatSession
 from app.models.document_chunk import DocumentChunk
 from app.models.generation_profile import GenerationProfile
 from app.models.question_embedding_meta import QuestionEmbeddingMeta
@@ -40,6 +41,8 @@ __all__ = [
     "EmailVerificationToken",
     "Subject",
     "Enrollment",
+    "ChatSession",
+    "ChatMessage",
     "Upload",
     "UploadStatus",
     "QuestionSet",
